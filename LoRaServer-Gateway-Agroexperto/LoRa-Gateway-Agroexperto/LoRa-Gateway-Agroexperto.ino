@@ -14,8 +14,8 @@
 #define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "VIVOFIBRA-5F56"
-#define  PASSWORD "33d7405f56"
+#define  SSID     "xxxxxxxxxxx"
+#define  PASSWORD "xxxxxxxxxxx"
 const char* ssid = SSID;
 const char* password = PASSWORD;
 
@@ -25,10 +25,10 @@ String loraPacket = "";
 String wifiPacket = "";
 
 //url do servidor para enviar dados
-const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
+const char* serverName = "https://agroexperto.xxxxxxxxxxxxxxxxx";
 
 //url do servidor para receber comandos
-const char* cmdName = "https://agroexperto.com.br/?????.php";
+const char* cmdName = "https://agroexperto.xxxxxxxxxx";
 
 //identificação da estação (código AgroexPerto)
 String stationCode = "AgroexPerto-Gate-1";
