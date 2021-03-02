@@ -20,12 +20,12 @@
 //observar que o LCD está nos pinos P2 e P14
 
 //SSID e senha do endpoint
- const char* ssid = "xpertinho";
-  const char* password = "xpert-secret";
+ const char* ssid = "xxxxxxxxxxxxxx";
+  const char* password = "xxxxxxxxxxx";
   IPAddress staticIP(192,168,1, 200); //IP do REMOTE
   IPAddress gateway ( 192, 168, 1, 1);
   IPAddress subnet ( 255, 255, 255, 0 );
-  IPAddress server(192, 168, 4, 15);
+  IPAddress server(192, 168, 4, 1);
 
 //define e inicializa as variáveis
 int minima = 99;
