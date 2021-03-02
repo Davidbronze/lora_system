@@ -125,7 +125,7 @@ void setupWiFi() {
       refreshDisplay();
     }
 
-    void refreshDisplay() {
+void refreshDisplay() {
       //Limpa o display
       Heltec.display->clear();
       //Exibe o estado atual do relê
@@ -135,6 +135,16 @@ void setupWiFi() {
       Heltec.display->display();
     }
 
+void gatewayDisplay() {
+      //Limpa o display
+      Heltec.display->clear();
+      //Exibe o estado atual do relê
+      Heltec.display->drawString(0, 0, currentState);
+      //Exibe o ip deste esp para ser utilizado no aplicativo
+      Heltec.display->drawString(0, 15, "GATEWAY");
+      Heltec.display->display();
+    }    
+
 void loop() {
       //Faz a leitura do pacote Lora
       loraPacket = readLoRaPacket(); //retorna a string "loraPacket"
@@ -142,6 +152,7 @@ void loop() {
       if(!loraPacket.equals("")) {
           // enviamos a mensagem por wifi para a rede        
           sendWiFiPacket(loraPacket);
+          gatewayDisplay();
           }  
       //recebe comendos pelo wifi
       
@@ -187,19 +198,6 @@ void sendWiFiPacket(String str){
         }
 
 
-// Task que insere novos clientes conectados no vector
-//void taskNewClients(){
-//      // Se existir um novo client atribuimos para a variável
-//      WiFiClient newClient = server.available();       
-//        // Se o client for diferente de nulo
-//        if(newClient) {      
-//          // Inserimos no vector
-//          clients.push_back(newClient);
-//          // Exibimos na serial indicando novo client e a quantidade atual de clients
-//          Serial.println("New client! size:"+String(clients.size()));
-//        }
-//      }
-
 // Função que verifica se o app enviou um comando
 void taskHandleClient(){
       // String que receberá o comando vindo do aplicativo
@@ -235,41 +233,3 @@ void sendLoRaPacket(String str) {
         //Finaliza e envia o pacote
         LoRa.endPacket();
       }
-
-//// Função que verifica se um ou mais clients se desconectaram do server e, se sim, estes clients serão retirados do vector
-//void refreshConnections(){
-//      // Flag que indica se pelo menos um client ser desconectou
-//      bool flag = false;
-//      
-//      // Objeto que receberá apenas os clients conectados
-//      std::vector<WiFiClient> newVector;
-//    
-//      // Percorremos o vector
-//      for(int i=0; i<clients.size(); i++){
-//        // Verificamos se o client está desconectado
-//        if(!clients[i].connected()){
-//          // Exibimos na serial que um cliente se desconectou e a posição em que ele está no vector (debug)
-//          Serial.println("Client disconnected! ["+String(i)+"]");
-//          // Desconectamos o client
-//          clients[i].stop();
-//          // Setamos a flag como true indicando que o vector foi alterado
-//          flag = true;          
-//        }
-//        else{
-//          newVector.push_back(clients[i]); // Se o client está conectado, adicionamos no newVector
-//        }
-//      }
-//      // Se pelo menos um client se desconectou, atribuimos ao vector "clients" os clients de "newVector"
-//      if(flag) clients = newVector;
-//    }
-
-
-
-
-////Função que envia mensagem para todos os apps conectados
-//void sendToClients(String msg) {
-//  for(int i=0; i<clients.size(); i++){
-//    clients[i].print(msg);
-//  
-//}
-//}
