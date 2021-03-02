@@ -1,6 +1,5 @@
 //GATEWAY com DDNS
 
-#include <HTTPClient.h>
 #include <heltec.h>
 #include <TaskScheduler.h>
 #include <vector>
@@ -8,6 +7,9 @@
 
 //Frequência
 #define BAND 915E6
+
+//Pino onde o relê está
+#define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
 #define  SSID     "VIVOFIBRA-5F56"
