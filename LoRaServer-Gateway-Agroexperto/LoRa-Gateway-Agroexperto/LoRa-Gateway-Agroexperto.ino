@@ -1,5 +1,5 @@
 
-//GATEWAY com DDNS
+//GATEWAY com DDNS - Gateway central
 
 #include <HTTPClient.h>
 #include <heltec.h>
@@ -21,17 +21,12 @@ const char* password = PASSWORD;
 
 //string que recebe o pacote lora
 String loraPacket = "";
-//string que recebe o pacote wifi
-String wifiPacket = "";
 
 //url do servidor para enviar dados
 const char* serverName = "https://agroexperto.xxxxxxxxxxxxxxxxx";
 
-//url do servidor para receber comandos
-const char* cmdName = "https://agroexperto.xxxxxxxxxx";
-
 //identificação da estação (código AgroexPerto)
-String stationCode = "AgroexPerto-Gate-1";
+String stationCode = "xxxxxxxxx-Gate-1";
 
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
 
@@ -135,13 +130,14 @@ void refreshDisplay() {
       Heltec.display->display();
     }
 
-void gatewayDisplay() {
+void gatewayDisplay(String pct) {
       //Limpa o display
       Heltec.display->clear();
       //Exibe o estado atual do relê
       Heltec.display->drawString(0, 0, currentState);
-      //Exibe o ip deste esp para ser utilizado no aplicativo
       Heltec.display->drawString(0, 15, "GATEWAY");
+      Heltec.display->drawString(0, 25, "Msg recebida: ");
+      Heltec.display->drawString(0, 35, pct);
       Heltec.display->display();
     }    
 
@@ -152,7 +148,7 @@ void loop() {
       if(!loraPacket.equals("")) {
           // enviamos a mensagem por wifi para a rede        
           sendWiFiPacket(loraPacket);
-          gatewayDisplay();
+          gatewayDisplay(loraPacket);
           }  
       //recebe comendos pelo wifi
       

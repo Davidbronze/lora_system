@@ -1,5 +1,6 @@
 
 //SERVER (Gateway remoto)
+//placa Heltec LoRa v2
 
 #include <HTTPClient.h>
 #include <DHT.h>
@@ -14,10 +15,10 @@
 //Pino onde o relê está
 #define RELAY 13
 #define DHTTYPE DHT22  //Define o tipo de sensor DHT
-#define DHTPIN 5   //P5 D1 Pino de ligacao do DHT22
-#define PIN_VL 4  // P4  D2  Leitura do  Pluviômetro
-#define PL 12     //P12  D6  RST Pluviometro
-//observar que o LCD está nos pinos P2 e P14
+#define DHTPIN 12   //12 Pino de ligacao do DHT22
+#define PIN_VL 36  // 36  Leitura do  Pluviômetro
+#define PL 37     //37  RST Pluviometro
+//observar que os pinos 2, 4, 5, 14, 15, 16, 19, 18, 21, 26, 27 não podem ser usados
 
 //SSID e senha do endpoint
  const char* ssid = "xxxxxxxxxxxxxx";
@@ -175,13 +176,13 @@ void weatherDisplay(int temperatura, int max_s, int min_s){
 }
 
 void loop() {
+    readPluv();  
      unsigned long currentMillis = millis();       
         if (currentMillis - previousMillis >= intervalo){  //Verifica se o intervalo já foi atingido
            previousMillis = currentMillis; //Armazena o valor da ultima leitura
           handleWeather();
-        }
-        
-  //Faz a leitura do pacote
+        }        
+     //Faz a leitura do pacote
       String packet = readLoRaPacket();
       //Se uma mensagem chegou
       if(!packet.equals("")) {
@@ -191,7 +192,7 @@ void loop() {
       //scheduler.execute();
 
       
-}
+  }
 
 //Faz a leitura de um pacote (se chegou algum)
 String readLoRaPacket() {
@@ -309,5 +310,26 @@ void handleWeather(){
        t_ant = t;
        h_ant = h;
       }
-      
+
+void readPluv(){
+      // Contagem pulsos pluviometro*********************
+        vl = digitalRead(PIN_VL);  // Inicia a leitura do pluviom            
+        if ( vl == 1 && lastState == 0 ) {
+          Serial.println(" bascula acionada ");
+          lastDebounceTime = millis();
+          lastState = 1;
+          }    
+        if ((millis() - lastDebounceTime) > debounceDelay) {
+          if (lastState == 1 && vl == 0){
+             Serial.println("nova leitura");
+            reedCounter +=1;
+            lastState = 0;
+            lastDebounceTime = 0;
+            precipitacao = float(reedCounter)*0.27;        
+            Serial.print("Precipitação (mm)= ");
+            Serial.print(precipitacao);
+            Serial.println(" mm");
+          }
+        }  
+  }
       
