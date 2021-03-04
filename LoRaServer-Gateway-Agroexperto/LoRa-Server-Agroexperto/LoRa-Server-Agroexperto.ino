@@ -252,6 +252,7 @@ bool verifyAndSetRelayState(String state) {
 
 //Função que envia mensagem para o endpoint
 void sendToClient(String msg) {
+  Serial.println("Enviado para o endpoint: " + msg);
    client.print(msg);
   }
 
@@ -312,7 +313,7 @@ void handleWeather(){
       }
 
 void readPluv(){
-      // Contagem pulsos pluviometro*********************
+      // Contagem pulsos pluviometro
         vl = digitalRead(PIN_VL);  // Inicia a leitura do pluviom            
         if ( vl == 1 && lastState == 0 ) {
           Serial.println(" bascula acionada ");
