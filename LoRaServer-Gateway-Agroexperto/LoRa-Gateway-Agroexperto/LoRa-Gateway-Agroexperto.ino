@@ -14,10 +14,13 @@
 #define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "xxxxxxxxxxx"
-#define  PASSWORD "xxxxxxxxxxx"
+#define  SSID     "teste1"
+#define  PASSWORD "12345678"
 const char* ssid = SSID;
 const char* password = PASSWORD;
+IPAddress staticIP(192,168,1, 200); //IP do GATEWAY
+IPAddress gateway ( 192, 168, 1, 1);
+IPAddress subnet ( 255, 255, 255, 0 );
 
 //string que recebe o pacote lora
 String loraPacket = "";
@@ -51,7 +54,7 @@ void taskHandleClient();
 ////Tarefa para verificar se uma nova conexão feita por aplicativo está sendo feita
 //Task t1(100, TASK_FOREVER, &taskNewClients, &scheduler, true);
 ////Tarefa para verificar se há novas mensagens vindas de aplicativo
-Task t2(100, TASK_FOREVER, &taskHandleClient, &scheduler, true);
+Task t1(100, TASK_FOREVER, &taskHandleClient, &scheduler, true);
 
 //Id e estados deste esp (altere para cada esp)
 String ID = "GATEWAY1";
@@ -70,17 +73,21 @@ void setup() {
       //Inicializa o display
       setupDisplay();    
       //Ativa o recebimento de pacotes lora
-      LoRa.receive();
+      
       //Se conecta à rede WiFi
       setupWiFi();
+
+      LoRa.onReceive(onReceive);
+      LoRa.receive();
     
       //Inicializa o server ao qual vc vai se conectar utilizando o ddns
-      //server.begin(port);
+      server.begin(port);
       
       //Inicializa o agendador de tarefas
-      //scheduler.startNow();
+      scheduler.startNow();
 
-      
+      Serial.println("Setup finalizado");
+      delay(5000);
       }
 
 //Inicializa o display
@@ -102,22 +109,34 @@ void setupDisplay() {
 void setupWiFi() {
       Serial.print("Conectando");
       //Faz o ESP se conectar à rede WiFi
-      WiFi.begin(SSID, PASSWORD);    
+      WiFi.setAutoConnect(true);
+      WiFi.config (staticIP, gateway, subnet);
+      WiFi.begin(ssid, password);    
         //Enquanto o ESP não se conectar à rede
-        while (WiFi.status() != WL_CONNECTED){
+        byte count = 0;
+        while (WiFi.status() != WL_CONNECTED && count < 50){
+          count ++; //fazemos "count" tentativas
               //Esperamos 100 milisegundos
               delay(100);
               Serial.print(".");
             }
-      //Se chegou aqui é porque conectou à rede, então mostramos no monitor serial para termos um feedback
-      Serial.println("");
-      Serial.println("Conectou");    
-      //Objeto que vamos utilizar para guardar o ip recebido
-      myIP = WiFi.localIP();
-      //Mostra o ip no monitor serial
-      Serial.println(myIP);    
-      //Atualiza o display para exibir o ip
-      refreshDisplay();
+      if (WiFi.status() == WL_CONNECTED){ 
+          //Se chegou aqui é porque conectou à rede, então mostramos no monitor serial para termos um feedback
+          Serial.println("");
+          Serial.println("Conectou");    
+          //Objeto que vamos utilizar para guardar o ip recebido
+          myIP = WiFi.localIP();
+          //Mostra o ip no monitor serial
+          Serial.println(myIP);    
+          //Atualiza o display para exibir o ip
+          refreshDisplay();
+      }
+      else {
+          Heltec.display -> clear();
+          Heltec.display -> drawString(0, 0, "Connecting...");
+          Heltec.display -> drawString(0, 25, "...Failed");
+          Heltec.display -> display();
+      }
     }
 
 void refreshDisplay() {
@@ -126,7 +145,7 @@ void refreshDisplay() {
       //Exibe o estado atual do relê
       Heltec.display->drawString(0, 0, currentState);
       //Exibe o ip deste esp para ser utilizado no aplicativo
-      Heltec.display->drawString(0, 15, myIP.toString());
+      Heltec.display->drawString(0, 25, myIP.toString());
       Heltec.display->display();
     }
 
@@ -135,38 +154,66 @@ void gatewayDisplay(String pct) {
       Heltec.display->clear();
       //Exibe o estado atual do relê
       Heltec.display->drawString(0, 0, currentState);
-      Heltec.display->drawString(0, 15, "GATEWAY");
+      Heltec.display->drawString(0, 5, "GATEWAY");
       Heltec.display->drawString(0, 25, "Msg recebida: ");
       Heltec.display->drawString(0, 35, pct);
       Heltec.display->display();
     }    
 
 void loop() {
+       //Executa as tarefas que foram adicionadas ao scheduler
+      scheduler.execute();      
+      
+     sendLoRaPacket("hello!");
+      
       //Faz a leitura do pacote Lora
-      loraPacket = readLoRaPacket(); //retorna a string "loraPacket"
+          LoRa.receive();
+          Serial.println(loraPacket);
+          String rssi = "RSSI: " + String(LoRa.packetRssi(), DEC); 
+          Serial.println(rssi);
+                
       //Se uma mensagem lora chegou
       if(!loraPacket.equals("")) {
-          // enviamos a mensagem por wifi para a rede        
+         //enviamos a mensagem por wifi para a rede        
           sendWiFiPacket(loraPacket);
           gatewayDisplay(loraPacket);
+          Serial.println("pacote recebido e enviado");
+          digitalWrite(25,LOW);
           }  
-      //recebe comendos pelo wifi
-      
-      //Executa as tarefas que foram adicionadas ao scheduler
-      scheduler.execute();
+           
    }
 
+void onReceive(int packetSize){
+          //if (packetSize == 0) return;
+          loraPacket = "";
+          digitalWrite(25,HIGH);
+            String packSize = String(packetSize,DEC);        
+            while (LoRa.available())
+            {
+            loraPacket += (char) LoRa.read();
+            }        
+            Serial.println(loraPacket);
+            String rssi = "RSSI: " + String(LoRa.packetRssi(), DEC); 
+            Serial.println(rssi);                
+        }
+
 //Faz a leitura de um pacote (se chegou algum)
-String readLoRaPacket() {
-        loraPacket = "";
-        //Verifica o tamanho do pacote
-        int packetSize = LoRa.parsePacket();
-        //Lê cada caractere e concatena na string 
-        for (int i = 0; i < packetSize; i++) { 
-          loraPacket += (char) LoRa.read(); 
-          }
-        return loraPacket;
-    }
+//String readLoRaPacket() {
+//        LoRa.receive();
+//        loraPacket = "";
+//        //Verifica o tamanho do pacote
+//        int packetSize = LoRa.parsePacket();
+//        Serial.print("Tamanho do pacote:  ");
+//        Serial.println(packetSize);
+//        int rssi = LoRa.packetRssi();
+//        Serial.println(rssi);
+//        //Lê cada caractere e concatena na string 
+//        while (LoRa.available()) {
+//        loraPacket += (char) LoRa.read();
+//        }
+//        return loraPacket;
+//        Serial.println(loraPacket);
+//    }
 
 void sendWiFiPacket(String str){
       if(WiFi.status()== WL_CONNECTED){
@@ -197,13 +244,13 @@ void sendWiFiPacket(String str){
 // Função que verifica se o app enviou um comando
 void taskHandleClient(){
       // String que receberá o comando vindo do aplicativo
-      String cmd;          
+      String appCmd;          
         if(client.available()){
           // Recebemos a String até o '\n'
-          cmd = client.readStringUntil('\n');
-          // Verificamos o comando, enviando por parâmetro a String cmd
-          handleCommand(cmd);
-          Serial.println(cmd);        
+          appCmd = client.readStringUntil('\n');
+          // Verificamos o comando, enviando por parâmetro a String appCmd
+          handleCommand(appCmd);
+          Serial.println(appCmd);        
         }          
       }
 
@@ -216,7 +263,7 @@ void handleCommand(String cmd){
         cmd.toUpperCase();      
         // Exibimos o comando recebido no monitor serial
         Serial.println("Received from app: " + cmd);
-          //Envia o comando para os outros esp através de um pacote LoRa
+          //Envia o comando para os REMOTES através de um pacote LoRa
           sendLoRaPacket(cmd);
         }
 
