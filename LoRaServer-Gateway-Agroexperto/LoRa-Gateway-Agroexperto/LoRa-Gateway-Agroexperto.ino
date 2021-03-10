@@ -29,7 +29,7 @@ String loraPacket = "";
 const char* serverName = "https://agroexperto.xxxxxxxxxxxxxxxxx";
 
 //identificação da estação (código AgroexPerto)
-String stationCode = "xxxxxxxxx-Gate-1";
+String stationCode = "xx-Gate-1";
 
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
 
@@ -164,7 +164,7 @@ void loop() {
        //Executa as tarefas que foram adicionadas ao scheduler
       scheduler.execute();      
       
-     sendLoRaPacket("hello!");
+     sendLoRaPacket("hello! from " + stationCode);
       
       //Faz a leitura do pacote Lora
           LoRa.receive();
