@@ -11,7 +11,7 @@
 #define BAND 915E6
 
 //Pino onde o relê está
-#define RELAY 13
+//#define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
 #define  SSID     "teste1"
@@ -36,9 +36,6 @@ unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
 //Objeto que vamos utilizar para guardar o ip recebido
 IPAddress myIP;
 
-//Instancia cliente wifi
-WiFiClient client;
-
 // Porta do server que vc vai utilizar para conectar pelo aplicativo
 const int port = 80; 
 // Objeto WiFi Server, o ESP será o servidor
@@ -48,13 +45,13 @@ WiFiServer server(port);
 //std::vector<WiFiClient> clients;
 
 //Tarefas para verificar novos clientes e mensagens enviadas por estes
-//Scheduler scheduler;
+Scheduler scheduler;
 //void taskNewClients();
-//void taskHandleClient();
+void taskHandleClient();
 ////Tarefa para verificar se uma nova conexão feita por aplicativo está sendo feita
 //Task t1(100, TASK_FOREVER, &taskNewClients, &scheduler, true);
 ////Tarefa para verificar se há novas mensagens vindas de aplicativo
-//Task t1(100, TASK_FOREVER, &taskHandleClient, &scheduler, true);
+Task t1(100, TASK_FOREVER, &taskHandleClient, &scheduler, true);
 
 //Id e estados deste esp (altere para cada esp)
 String ID = "GATEWAY1";
@@ -81,10 +78,12 @@ void setup() {
       LoRa.receive();
     
       //Inicializa o server ao qual vc vai se conectar utilizando o ddns
-      server.begin(port);
+      server.begin();
       
       //Inicializa o agendador de tarefas
-      //scheduler.startNow();
+      scheduler.startNow();
+
+      sendLoRaPacket("Pacote de teste");
 
       Serial.println("Setup finalizado");
       delay(5000);
@@ -154,21 +153,18 @@ void gatewayDisplay(String pct) {
       Heltec.display->clear();
       //Exibe o estado atual do relê
       Heltec.display->drawString(0, 0, currentState);
-      Heltec.display->drawString(0, 5, "GATEWAY");
       Heltec.display->drawString(0, 25, "Msg recebida: ");
-      Heltec.display->drawString(0, 35, pct);
+      Heltec.display->drawString(0, 40, pct);
       Heltec.display->display();
     }    
 
 void loop() {
        //Executa as tarefas que foram adicionadas ao scheduler
-      //scheduler.execute();      
-      
-     sendLoRaPacket("hello! from " + stationCode);
-      
+      scheduler.execute();      
+           
       //Faz a leitura do pacote Lora
-      
         int packetSize = LoRa.parsePacket();
+        Serial.println(packetSize);
          receiveLora(packetSize);
                 
       //Se uma mensagem lora chegou
@@ -178,20 +174,21 @@ void loop() {
           gatewayDisplay(loraPacket);
           Serial.println("pacote recebido e enviado");
           digitalWrite(25,LOW);
+          delay(5000);
           }
           else {Serial.println("nenhum pacote lora");}  
            
-   }
+       }
 
 void receiveLora(int packetSize){
           //if (packetSize == 0) return;
           loraPacket = "";
-          digitalWrite(25,HIGH);
             String packSize = String(packetSize,DEC);
             Serial.print(packSize);       
             for (int i = 0; i < packetSize; i++) {
               loraPacket += (char) LoRa.read();
               }
+              digitalWrite(25, HIGH);
             Serial.print("  bytes recebidos da Station 1 ");
             Serial.println(loraPacket);
             String rssi = "RSSI: " + String(LoRa.packetRssi(), DEC); 
@@ -226,30 +223,33 @@ void sendWiFiPacket(String str){
 
 
 // Função que verifica se o app enviou um comando
-//void taskHandleClient(){
-//      // String que receberá o comando vindo do aplicativo
-//      String appCmd;          
-//        if(client.available()){
-//          // Recebemos a String até o '\n'
-//          appCmd = client.readStringUntil('\n');
-//          // Verificamos o comando, enviando por parâmetro a String appCmd
-//          handleCommand(appCmd);
-//          Serial.println(appCmd);        
-//        }          
-//      }
+void taskHandleClient(){
+      // String que receberá o comando vindo do aplicativo
+      String appCmd;
+      //Instancia cliente wifi
+        WiFiClient client = server.available();
+                
+        if(client.available()){
+          // Recebemos a String até o '\n'
+          appCmd = client.readStringUntil('\n');
+          // Verificamos o comando, enviando por parâmetro a String appCmd
+          handleCommand(appCmd);
+          Serial.println(appCmd);        
+        }          
+      }
 //
-//// Função que verifica o comando vindo do app
-//void handleCommand(String cmd){
-//        // Se a String estiver vazia não precisamos fazer nada
-//        if (cmd.equals(""))
-//          return;      
-//        //Coloca todos os caracteres em maiúsculo
-//        cmd.toUpperCase();      
-//        // Exibimos o comando recebido no monitor serial
-//        Serial.println("Received from app: " + cmd);
-//          //Envia o comando para os REMOTES através de um pacote LoRa
-//          sendLoRaPacket(cmd);
-//        }
+// Função que verifica o comando vindo do app
+void handleCommand(String cmd){
+        // Se a String estiver vazia não precisamos fazer nada
+        if (cmd.equals(""))
+          return;      
+        //Coloca todos os caracteres em maiúsculo
+        cmd.toUpperCase();      
+        // Exibimos o comando recebido no monitor serial
+        Serial.println("Received from app: " + cmd);
+          //Envia o comando para os REMOTES através de um pacote LoRa
+          sendLoRaPacket(cmd);
+        }
 
         //Envia um pacote LoRa
 void sendLoRaPacket(String str) {

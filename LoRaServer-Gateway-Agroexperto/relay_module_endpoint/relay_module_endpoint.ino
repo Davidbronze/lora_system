@@ -7,7 +7,7 @@
 const char* ssid = "teste1";
 const char* password = "12345678";
 WiFiServer server (80);
-IPAddress IP(192, 168, 4, 15);
+IPAddress IP(192, 168, 4, 151);
 IPAddress subnet ( 255, 255, 255, 0 );
 
   //Hex command to send to serial for close relay 1

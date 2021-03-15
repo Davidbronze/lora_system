@@ -21,12 +21,14 @@
 //observar que os pinos 2, 4, 5, 14, 15, 16, 19, 18, 21, 26, 27 não podem ser usados
 
 //SSID e senha do endpoint
- const char* ssid = "xxxxxxxxxxxxxx";
-  const char* password = "xxxxxxxxxxx";
-  IPAddress staticIP(192,168,1, 200); //IP do REMOTE
+ const char* ssid = "teste1";
+  const char* password = "12345678";
+  IPAddress staticIP(192,168,5, 199); //IP do REMOTE
   IPAddress gateway ( 192, 168, 1, 1);
   IPAddress subnet ( 255, 255, 255, 0 );
-  IPAddress server(192, 168, 4, 1);
+  IPAddress server(192, 168, 4, 151);
+  const char* serverNameTemp = "";
+  
 
 //define e inicializa as variáveis
 int minima = 99;
@@ -211,9 +213,7 @@ void handleCommand(String cmd)
     {
       // Se a String estiver vazia não precisamos fazer nada
       if (cmd.equals(""))
-        return;
-      //Coloca todos os caracteres em maiúsculo
-      cmd.toUpperCase();    
+        return;         
       // Exibimos o comando recebido no monitor serial
       Serial.println("Received from app: " + cmd);    
       //Verifica se a mensagem é para este esp e modifica o estado do relê de acordo com o que foi enviado
@@ -221,14 +221,14 @@ void handleCommand(String cmd)
       //Se a mensagem é para este esp
       if(forMe) {
         //Envia mensagem de confirmaçao de volta para o gateway
-        String confirmationMessage = currentState + " OK";
+        String confirmationMessage = ID + " OK";
         sendLoRaPacket(confirmationMessage);
         Serial.println("Changed Relay status: " + confirmationMessage);
       }
       //Se  é para o endpoint
       else {
         //Envia o comando para o endpoint
-       sendToClient(cmd);
+       sendToEnd(cmd);
       }
   }
 
@@ -236,25 +236,28 @@ void handleCommand(String cmd)
 //Retorna true se a mensagem for para este esp e false caso contrário
 bool verifyAndSetRelayState(String state) {
       //Se a mudança de estado pertence ao id vinculado a este esp
-      if (state == ID_ON || state == ID_OFF) {
-            //Guarda o estado atual
-            currentState = state;
-        
-            //Modificamos o estado do relê de acordo com o estado enviado
-            digitalWrite(RELAY, currentState == ID_ON ? LOW : HIGH);
-            
-            //Atualizamos o display com o estado atualizado
-            refreshDisplay();
-            return true;
-        }
-      return false;
-  }
+      if (state.indexOf(ID) !=1) {
+          if (state.indexOf("rootRelay") !=1) {             
+            digitalWrite(RELAY, (state.indexOf("Off"))) ? LOW : HIGH);
+              //Atualizamos o display com o estado atualizado
+              refreshDisplay();
+              return true;          
+              }
+              //Atualizamos o display com o estado atualizado
+               return false;
+      }
 
 //Função que envia mensagem para o endpoint
-void sendToClient(String msg) {
+void sendToEnd(String msg) {
+  const char* serverNameTemp = "";
+  HTTPClient http;
+  String endPointCmd = (server + msg
+  http.begin(endPointCmd);
+  
   Serial.println("Enviado para o endpoint: " + msg);
-   client.print(msg);
-  }
+  
+}
+  
 
 
 //Envia um pacote LoRa
@@ -265,6 +268,7 @@ void sendLoRaPacket(String str) {
   LoRa.print(str);
   //Finaliza e envia o pacote
   LoRa.endPacket();
+  Serial.println(str);
 }
 
 void handleWeather(){
@@ -304,12 +308,13 @@ void handleWeather(){
             counter = 0;            
             
             //Cria a string com os dados
-            String body = "leit1=" + stationCode + "&leit2=" + t + "&leit3=" + h;
+            String body = "leit1=" + stationCode + "&leit2=" + t + "&leit3=" + h + "&leit4=" + precipitacao;
           
                   sendLoRaPacket(body);                
                 }            
        t_ant = t;
        h_ant = h;
+       precipitacao=0;
       }
 
 void readPluv(){
