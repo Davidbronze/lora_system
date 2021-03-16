@@ -99,7 +99,7 @@ void setup() {
         setupWiFi();  
       
         //Modifica o estado do relê para desligado
-        verifyAndSetRelayState(ID_OFF);
+        verifyDestiny(ID_OFF);
       
         //Inicializa o agendador de tarefas
        // scheduler.startNow();
@@ -209,51 +209,51 @@ String readLoRaPacket() {
     }
 
 // Função que verifica o comando vindo do gateway
-void handleCommand(String cmd)
-    {
+void handleCommand(String cmd){
       // Se a String estiver vazia não precisamos fazer nada
       if (cmd.equals(""))
         return;         
       // Exibimos o comando recebido no monitor serial
       Serial.println("Received from app: " + cmd);    
-      //Verifica se a mensagem é para este esp e modifica o estado do relê de acordo com o que foi enviado
-      bool forMe = verifyAndSetRelayState(cmd);    
+      //Verifica se a mensagem é para este esp
+      bool forMe = verifyDestiny(cmd);    
       //Se a mensagem é para este esp
       if(forMe) {
-        //Envia mensagem de confirmaçao de volta para o gateway
-        String confirmationMessage = ID + " OK";
-        sendLoRaPacket(confirmationMessage);
-        Serial.println("Changed Relay status: " + confirmationMessage);
-      }
-      //Se  é para o endpoint
-      else {
-        //Envia o comando para o endpoint
-       sendToEnd(cmd);
+        if (state.indexOf("rootRelay") != -1) {             
+            digitalWrite(RELAY, (state.indexOf("Off"))) ? LOW : HIGH); //muda o estado do relay
+              //Atualizamos o display com o estado atualizado
+              //Envia mensagem de confirmaçao de volta para o gateway
+              String confirmationMessage = ID + " OK";
+              sendLoRaPacket(confirmationMessage);
+              Serial.println("Changed Relay status: " + confirmationMessage);
+            }
+        //Se  é para o endpoint
+        else {
+          //Envia o comando para o endpoint
+         sendToEnd(cmd);
       }
   }
+    }
 
   //Verifica se estado é valido para este esp e modifica o estado do relê de acordo
 //Retorna true se a mensagem for para este esp e false caso contrário
-bool verifyAndSetRelayState(String state) {
+bool verifyDestiny(String state) {
       //Se a mudança de estado pertence ao id vinculado a este esp
-      if (state.indexOf(ID) !=1) {
-          if (state.indexOf("rootRelay") !=1) {             
-            digitalWrite(RELAY, (state.indexOf("Off"))) ? LOW : HIGH);
-              //Atualizamos o display com o estado atualizado
-              refreshDisplay();
-              return true;          
-              }
-              //Atualizamos o display com o estado atualizado
-               return false;
-      }
+      if (state.indexOf(ID) != -1) {          
+              refreshDisplay(); 
+              return true;                       
+               }
+       return false;              
+       }
 
 //Função que envia mensagem para o endpoint
 void sendToEnd(String msg) {
-  const char* serverNameTemp = "";
-  HTTPClient http;
-  String endPointCmd = (server + msg
-  http.begin(endPointCmd);
-  
+  String endPointCmd = "http://" + server + "/" + msg;
+  const char* serverNameTemp = endPointCmd;
+  HTTPClient http;  
+  http.begin(serverNameTemp);
+  http.GET();
+  http.end();  
   Serial.println("Enviado para o endpoint: " + msg);
   
 }
