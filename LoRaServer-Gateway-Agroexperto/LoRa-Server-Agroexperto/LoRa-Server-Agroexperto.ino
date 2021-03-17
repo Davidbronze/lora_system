@@ -69,11 +69,11 @@ WiFiClient client;
 //Task t2(100, TASK_FOREVER, &taskHandleClient, &scheduler, true);
 
 //Id e estados deste esp (altere para cada esp)
-String ID = "REMOTE1";
+String ID = "REMOTE1"; // ID desta unidade
 String ID_ON = ID + " ON";
 String ID_OFF = ID + " OFF";
 //identificação da estação (código AgroexPerto)
-String stationCode = "SP200";
+String stationCode = "SP200"; //id da estação - alterar e conferir depois de depurar o programa
 
 
 //Variável para guardar o valor do estado atual do relê 
@@ -219,8 +219,8 @@ void handleCommand(String cmd){
       bool forMe = verifyDestiny(cmd);    
       //Se a mensagem é para este esp
       if(forMe) {
-        if (state.indexOf("rootRelay") != -1) {             
-            digitalWrite(RELAY, (state.indexOf("Off"))) ? LOW : HIGH); //muda o estado do relay
+        if (cmd.indexOf("rootRelay") != -1) {             
+            digitalWrite(RELAY, (cmd.indexOf("Off")) ? LOW : HIGH); //muda o estado do relay
               //Atualizamos o display com o estado atualizado
               //Envia mensagem de confirmaçao de volta para o gateway
               String confirmationMessage = ID + " OK";
@@ -230,46 +230,54 @@ void handleCommand(String cmd){
         //Se  é para o endpoint
         else {
           //Envia o comando para o endpoint
+          digitalWrite(25, HIGH);
+          Serial.println("comando deve ser enviado para o endpoint");
          sendToEnd(cmd);
+        }
       }
-  }
     }
 
   //Verifica se estado é valido para este esp e modifica o estado do relê de acordo
 //Retorna true se a mensagem for para este esp e false caso contrário
 bool verifyDestiny(String state) {
       //Se a mudança de estado pertence ao id vinculado a este esp
-      if (state.indexOf(ID) != -1) {          
-              refreshDisplay(); 
+      if (state.indexOf("REMOTE1") != -1) {          
+              refreshDisplay();
+              Serial.println("o comando é para este esp"); 
               return true;                       
                }
-       return false;              
+       return false;
+       Serial.println("o comando não é para este esp");             
        }
 
 //Função que envia mensagem para o endpoint
 void sendToEnd(String msg) {
-  String endPointCmd = "http://" + server + "/" + msg;
-  const char* serverNameTemp = endPointCmd;
-  HTTPClient http;  
-  http.begin(serverNameTemp);
-  http.GET();
-  http.end();  
-  Serial.println("Enviado para o endpoint: " + msg);
-  
+  if ((WiFi.status() == WL_CONNECTED)){
+    Serial.println("sendToEnd inciado");
+    String head = "http://192.168.4.151:80/";
+  String endPointcmd = head + msg;
+  Serial.println("conteúdo da requisição enviada ao endpoint: " + endPointcmd);
+        //const char* serverNameTemp = ;
+        HTTPClient http;  
+        http.begin(endPointcmd);
+        int httpResponseCode = http.GET();
+        http.end();  
+        Serial.println("Enviado para o endpoint: " + msg);  
+      }
 }
   
 
 
 //Envia um pacote LoRa
 void sendLoRaPacket(String str) {
-  //Inicializa o pacote
-  LoRa.beginPacket();
-  //Coloca a string no pacote
-  LoRa.print(str);
-  //Finaliza e envia o pacote
-  LoRa.endPacket();
-  Serial.println(str);
-}
+        //Inicializa o pacote
+        LoRa.beginPacket();
+        //Coloca a string no pacote
+        LoRa.print(str);
+        //Finaliza e envia o pacote
+        LoRa.endPacket();
+        Serial.println(str);
+      }
 
 void handleWeather(){
   //executa a rotina de coleta do DHT                                

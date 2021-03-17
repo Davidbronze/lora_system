@@ -40,12 +40,11 @@ void setup ()
   Serial.begin (115200);
   Serial.println();
   Serial.print("Setting soft-AP configuration ... ");
-  Serial.println(WiFi.softAPConfig(IP, IP, subnet) ? "Ready" : "Failed!");
   Serial.print("Setting soft-AP ... ");
   Serial.println(WiFi.softAP(ssid, password) ? "Ready" : "Failed!"); // (”ssid”, “password”) do AP   
   server.begin();
   Serial.print("Server em: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(WiFi.softAPIP());
   delay(50);
 
 }
@@ -73,51 +72,51 @@ void loop() {
   //int stat3;
   //int stat4;
   
-  if (req.indexOf ("acao=relay1On") != -1)      //relay 1 on
+  if (req.indexOf ("relay1On") != -1)      //relay 1 on
   {
-    //Serial.write (re1ON, sizeof(re1ON));
+    Serial.write (re1ON, sizeof(re1ON));
     Serial.println("relay 1 on");
    // stat1 = 1; // if you want feedback see below
   }
-  else if (req.indexOf ("acao=relay1Off") != -1) //relay 1 off
+  else if (req.indexOf ("relay1Off") != -1) //relay 1 off
   {
-      //Serial.write (re1OFF, sizeof(re1OFF));
+      Serial.write (re1OFF, sizeof(re1OFF));
       Serial.println("relay 1 off");
      // stat1 = 0; // if you want feedback
   }
-   else if (req.indexOf ("acao=relay2On") != -1) //relay 2 on
+   else if (req.indexOf ("relay2On") != -1) //relay 2 on
   {
-      //Serial.write (re2ON, sizeof(re2ON));
+      Serial.write (re2ON, sizeof(re2ON));
       Serial.println("relay 2 on");
      // stat2 = 1; // if you want feedback
   }
-   else if (req.indexOf ("acao=relay2Off") != -1)  //relay 2 off
+   else if (req.indexOf ("relay2Off") != -1)  //relay 2 off
   {
-     // Serial.write (re2OFF, sizeof(re2OFF));
+      Serial.write (re2OFF, sizeof(re2OFF));
       Serial.println("relay 2 off");
      // stat3 = 0; // if you want feedback
   }
-  else if (req.indexOf ("acao=relay3On") != -1) //relay 3 on
+  else if (req.indexOf ("relay3On") != -1) //relay 3 on
   {
-      //Serial.write (re3ON, sizeof(re3ON));
+      Serial.write (re3ON, sizeof(re3ON));
       Serial.println("relay 3 on");
      // stat3 = 1; // if you want feedback
   }
-   else if (req.indexOf ("acao=relay3Off") != -1) //relay 3 off
+   else if (req.indexOf ("relay3Off") != -1) //relay 3 off
   {
-      //Serial.write (re3OFF, sizeof(re3OFF));
+      Serial.write (re3OFF, sizeof(re3OFF));
       Serial.println("relay 3 off");
     //  stat3 = 0; // if you want feedback
   }
-  else if (req.indexOf ("acao=relay4On") != -1) //relay 4 on
+  else if (req.indexOf ("relay4On") != -1) //relay 4 on
   {
-      //Serial.write (re4ON, sizeof(re4ON));
+      Serial.write (re4ON, sizeof(re4ON));
       Serial.println("relay 4 on");
     //  stat4 = 1; // if you want feedback
   }
-   else if (req.indexOf ("acao=relay4Off") != -1) //relay 4 off
+   else if (req.indexOf ("relay4Off") != -1) //relay 4 off
   {
-      //Serial.write (re4OFF, sizeof(re4OFF));
+      Serial.write (re4OFF, sizeof(re4OFF));
       Serial.println("relay 4 off");
      // stat4 = 0; // if you want feedback
   }

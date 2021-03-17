@@ -47,11 +47,11 @@ WiFiServer server(port);
 //Tarefas para verificar novos clientes e mensagens enviadas por estes
 Scheduler scheduler;
 //void taskNewClients();
-void taskHandleClient();
+void taskGetCommand();
 ////Tarefa para verificar se uma nova conexão feita por aplicativo está sendo feita
 //Task t1(100, TASK_FOREVER, &taskNewClients, &scheduler, true);
 ////Tarefa para verificar se há novas mensagens vindas de aplicativo
-Task t1(100, TASK_FOREVER, &taskHandleClient, &scheduler, true);
+Task t1(100, TASK_FOREVER, &taskGetCommand, &scheduler, true);
 
 //Id e estados deste esp (altere para cada esp)
 String ID = "GATEWAY1";
@@ -160,21 +160,23 @@ void gatewayDisplay(String pct) {
 
 void loop() {
        //Executa as tarefas que foram adicionadas ao scheduler
+       Serial.println("início do loop");
+       Serial.println();
       scheduler.execute();      
            
       //Faz a leitura do pacote Lora
         int packetSize = LoRa.parsePacket();
-        Serial.println(packetSize);
-         receiveLora(packetSize);
+        receiveLora(packetSize);
                 
       //Se uma mensagem lora chegou
       if(!loraPacket.equals("")) {
+          //digitalWrite(25, HIGH);
          //enviamos a mensagem por wifi para a rede        
           sendWiFiPacket(loraPacket);
           gatewayDisplay(loraPacket);
-          Serial.println("pacote recebido e enviado");
-          digitalWrite(25,LOW);
+          Serial.println("pacote recebido da estação e enviado para o BD");
           delay(5000);
+          //digitalWrite(25,LOW);
           }
           else {Serial.println("nenhum pacote lora");}  
            
@@ -188,7 +190,6 @@ void receiveLora(int packetSize){
             for (int i = 0; i < packetSize; i++) {
               loraPacket += (char) LoRa.read();
               }
-              digitalWrite(25, HIGH);
             Serial.print("  bytes recebidos da Station 1 ");
             Serial.println(loraPacket);
             String rssi = "RSSI: " + String(LoRa.packetRssi(), DEC); 
@@ -223,19 +224,24 @@ void sendWiFiPacket(String str){
 
 
 // Função que verifica se o app enviou um comando
-void taskHandleClient(){
+void taskGetCommand(){
       // String que receberá o comando vindo do aplicativo
-      String appCmd;
+      String appCmd = "REMOTE1relay1On";
+      String appCmdOff = "REMOTE1relay1Off";
       //Instancia cliente wifi
         WiFiClient client = server.available();
                 
-        if(client.available()){
+       // if(client.available()){
           // Recebemos a String até o '\n'
-          appCmd = client.readStringUntil('\n');
+        //  appCmd = client.readStringUntil('\n');
           // Verificamos o comando, enviando por parâmetro a String appCmd
           handleCommand(appCmd);
-          Serial.println(appCmd);        
-        }          
+          digitalWrite(25, HIGH);
+          delay(5000);
+          handleCommand(appCmdOff);
+          digitalWrite(25, LOW);
+          delay(5000);        
+        //}          
       }
 //
 // Função que verifica o comando vindo do app
@@ -244,9 +250,10 @@ void handleCommand(String cmd){
         if (cmd.equals(""))
           return;      
         //Coloca todos os caracteres em maiúsculo
-        cmd.toUpperCase();      
+       // cmd.toUpperCase();      
         // Exibimos o comando recebido no monitor serial
         Serial.println("Received from app: " + cmd);
+        Serial.println();
           //Envia o comando para os REMOTES através de um pacote LoRa
           sendLoRaPacket(cmd);
         }
