@@ -127,7 +127,9 @@ void setupWiFi() {
         WiFi.config (staticIP, gateway, subnet);
         WiFi.begin(ssid, password);    
         //Enquanto o ESP não se conectar à rede
-          while (WiFi.status() != WL_CONNECTED) {
+        byte count = 0;
+          while (WiFi.status() != WL_CONNECTED && count < 50) {
+              count ++; //fazemos "count" tentativas
               //Esperamos 100 milisegundos
               delay(100);
               Serial.print(".");
@@ -186,6 +188,7 @@ void loop() {
         }        
      //Faz a leitura do pacote
       String packet = readLoRaPacket();
+      Serial.println("1 " + packet);
       //Se uma mensagem chegou
       if(!packet.equals("")) {
       handleCommand(packet);
@@ -214,7 +217,8 @@ void handleCommand(String cmd){
       if (cmd.equals(""))
         return;         
       // Exibimos o comando recebido no monitor serial
-      Serial.println("Received from app: " + cmd);    
+      delay(5000);
+      Serial.println("2 Received from Gateway: " + cmd);    
       //Verifica se a mensagem é para este esp
       bool forMe = verifyDestiny(cmd);    
       //Se a mensagem é para este esp
@@ -225,13 +229,14 @@ void handleCommand(String cmd){
               //Envia mensagem de confirmaçao de volta para o gateway
               String confirmationMessage = ID + " OK";
               sendLoRaPacket(confirmationMessage);
-              Serial.println("Changed Relay status: " + confirmationMessage);
+              Serial.println("4 Changed Relay status: " + confirmationMessage);
             }
         //Se  é para o endpoint
         else {
           //Envia o comando para o endpoint
           digitalWrite(25, HIGH);
-          Serial.println("comando deve ser enviado para o endpoint");
+          Serial.println("4 comando deve ser enviado para o endpoint");
+          delay(5000);
          sendToEnd(cmd);
         }
       }
@@ -243,28 +248,35 @@ bool verifyDestiny(String state) {
       //Se a mudança de estado pertence ao id vinculado a este esp
       if (state.indexOf("REMOTE1") != -1) {          
               refreshDisplay();
-              Serial.println("o comando é para este esp"); 
+              delay(5000);
+              Serial.println("3 o comando é para este esp"); 
               return true;                       
                }
        return false;
-       Serial.println("o comando não é para este esp");             
+       Serial.println("3 o comando não é para este esp");             
        }
 
 //Função que envia mensagem para o endpoint
 void sendToEnd(String msg) {
+  const char* host = "192.168.4.151";
   if ((WiFi.status() == WL_CONNECTED)){
-    Serial.println("sendToEnd inciado");
-    String head = "http://192.168.4.151:80/";
-  String endPointcmd = head + msg;
-  Serial.println("conteúdo da requisição enviada ao endpoint: " + endPointcmd);
-        //const char* serverNameTemp = ;
-        HTTPClient http;  
-        http.begin(endPointcmd);
-        int httpResponseCode = http.GET();
-        http.end();  
-        Serial.println("Enviado para o endpoint: " + msg);  
+    Serial.println("5 sendToEnd inciado");   
+    String endPointcmd = host + msg;
+    delay(5000);
+    Serial.println("6 Tentando enviar ao endpoint");
+    delay(5000);
+        if (!client.connect(host, port)) {
+              Serial.println("7 connection failed");
+              delay(5000);
+              return;
+            }
+        client.print(endPointcmd);
+        client.stop();
+        Serial.println("7 comando enviado ao endpoint");
+        delay(5000);
+        return;       
       }
-}
+    }
   
 
 
@@ -276,7 +288,8 @@ void sendLoRaPacket(String str) {
         LoRa.print(str);
         //Finaliza e envia o pacote
         LoRa.endPacket();
-        Serial.println(str);
+        delay(5000);
+        Serial.println("7  " + str);
       }
 
 void handleWeather(){
@@ -308,22 +321,21 @@ void handleWeather(){
                   minima = t;}  
               
               //Envia as informacoes para o display
-              weatherDisplay(t, maxima, minima);          
-            
+              weatherDisplay(t, maxima, minima);  
           //===============================================================
           
-          if(counter >= 60){
-            counter = 0;            
-            
-            //Cria a string com os dados
-            String body = "leit1=" + stationCode + "&leit2=" + t + "&leit3=" + h + "&leit4=" + precipitacao;
-          
-                  sendLoRaPacket(body);                
-                }            
-       t_ant = t;
-       h_ant = h;
-       precipitacao=0;
-      }
+                    if(counter >= 60){
+                      counter = 0;            
+                      
+                      //Cria a string com os dados
+                      String body = "leit1=" + stationCode + "&leit2=" + t + "&leit3=" + h + "&leit4=" + precipitacao;
+                    
+                            sendLoRaPacket(body);                
+                          }            
+                 t_ant = t;
+                 h_ant = h;
+                 precipitacao=0;
+                }
 
 void readPluv(){
       // Contagem pulsos pluviometro

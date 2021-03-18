@@ -41,10 +41,11 @@ void setup ()
   Serial.println();
   Serial.print("Setting soft-AP configuration ... ");
   Serial.print("Setting soft-AP ... ");
-  Serial.println(WiFi.softAP(ssid, password) ? "Ready" : "Failed!"); // (”ssid”, “password”) do AP   
-  server.begin();
+  WiFi.softAPConfig(IP, IP, subnet);
+  Serial.println(WiFi.softAP(ssid, password) ? "Ready" : "Failed!"); // (”ssid”, “password”) do AP
   Serial.print("Server em: ");
   Serial.println(WiFi.softAPIP());
+  server.begin();
   delay(50);
 
 }
@@ -53,17 +54,24 @@ void loop() {
   
   // Check if a client has connected
   WiFiClient client = server.available();
-  if ( ! client ) {
+  if (! client ) {
     return;
   }
 
-  Serial.println("Novo cliente conectou");  
- 
-  // Read the first line of the request
-  String req = client.readStringUntil ('\r');
+  Serial.println("Novo cliente conectou"); 
+ // client.setTimeout(5000); // default is 1000
 
-  Serial.print("Requisicao: ");
-  Serial.println(req);
+ 
+      // Read the first line of the request
+      String req = "";
+      while (client.connected()) {            // loop while the client's connected
+          if (client.available()) {             // if there's bytes to read from the client,
+            String req = client.readStringUntil('\r');
+            if (req.length() == 1 && req[0] == '\n'){          
+                  client.println("HTTP/1.1 200 OK");
+                  client.println("Content-type:text/html");
+                  client.println();
+            }
   
   //alterar esta parte do código para inserir os comandos dos outros relays
 
@@ -75,49 +83,41 @@ void loop() {
   if (req.indexOf ("relay1On") != -1)      //relay 1 on
   {
     Serial.write (re1ON, sizeof(re1ON));
-    Serial.println("relay 1 on");
-   // stat1 = 1; // if you want feedback see below
+       // stat1 = 1; // if you want feedback see below
   }
   else if (req.indexOf ("relay1Off") != -1) //relay 1 off
   {
-      Serial.write (re1OFF, sizeof(re1OFF));
-      Serial.println("relay 1 off");
+      Serial.write (re1OFF, sizeof(re1OFF));      
      // stat1 = 0; // if you want feedback
   }
    else if (req.indexOf ("relay2On") != -1) //relay 2 on
   {
-      Serial.write (re2ON, sizeof(re2ON));
-      Serial.println("relay 2 on");
+      Serial.write (re2ON, sizeof(re2ON));      
      // stat2 = 1; // if you want feedback
   }
    else if (req.indexOf ("relay2Off") != -1)  //relay 2 off
   {
-      Serial.write (re2OFF, sizeof(re2OFF));
-      Serial.println("relay 2 off");
+      Serial.write (re2OFF, sizeof(re2OFF));      
      // stat3 = 0; // if you want feedback
   }
   else if (req.indexOf ("relay3On") != -1) //relay 3 on
   {
-      Serial.write (re3ON, sizeof(re3ON));
-      Serial.println("relay 3 on");
+      Serial.write (re3ON, sizeof(re3ON));      
      // stat3 = 1; // if you want feedback
   }
    else if (req.indexOf ("relay3Off") != -1) //relay 3 off
   {
       Serial.write (re3OFF, sizeof(re3OFF));
-      Serial.println("relay 3 off");
     //  stat3 = 0; // if you want feedback
   }
   else if (req.indexOf ("relay4On") != -1) //relay 4 on
   {
       Serial.write (re4ON, sizeof(re4ON));
-      Serial.println("relay 4 on");
     //  stat4 = 1; // if you want feedback
   }
    else if (req.indexOf ("relay4Off") != -1) //relay 4 off
   {
       Serial.write (re4OFF, sizeof(re4OFF));
-      Serial.println("relay 4 off");
      // stat4 = 0; // if you want feedback
   }
 
@@ -126,10 +126,11 @@ void loop() {
 //  s += "</html>\n";
 //  // Send the response to the client
 //  client.print (s);
-  delay (1000);
+  delay (100);
 
 //Fecha a conexao
 client.stop();
-Serial.println("Cliente desconectado");
-
-}
+Serial.println("comandos enviados");
+        }
+    }
+ }

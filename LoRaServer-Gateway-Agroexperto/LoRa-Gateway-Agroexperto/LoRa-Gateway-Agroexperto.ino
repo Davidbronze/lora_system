@@ -237,10 +237,10 @@ void taskGetCommand(){
           // Verificamos o comando, enviando por parâmetro a String appCmd
           handleCommand(appCmd);
           digitalWrite(25, HIGH);
-          delay(5000);
-          handleCommand(appCmdOff);
-          digitalWrite(25, LOW);
-          delay(5000);        
+          delay(10000);
+//          handleCommand(appCmdOff);
+//          digitalWrite(25, LOW);
+//          delay(10000);        
         //}          
       }
 //
