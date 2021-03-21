@@ -258,25 +258,27 @@ bool verifyDestiny(String state) {
 
 //Função que envia mensagem para o endpoint
 void sendToEnd(String msg) {
-  const char* host = "192.168.4.151";
+  const char* host = "http://192.168.4.151/";
   if ((WiFi.status() == WL_CONNECTED)){
+    HTTPClient http;
     Serial.println("5 sendToEnd inciado");   
     String endPointcmd = host + msg;
     delay(5000);
+    http.begin(endPointcmd);
     Serial.println("6 Tentando enviar ao endpoint");
     delay(5000);
-        if (!client.connect(host, port)) {
-              Serial.println("7 connection failed");
-              delay(5000);
-              return;
+        int httpCode = http.GET();
+        if(httpCode>0){
+            Serial.println("7 comando enviado ao endpoint");
+            Serial.println(httpCode);
+            delay(5000);
+            return;       
             }
-        client.print(endPointcmd);
-        client.stop();
-        Serial.println("7 comando enviado ao endpoint");
-        delay(5000);
-        return;       
-      }
+         else {
+          Serial.println("7 sending to endpoint failed");
+         }
     }
+}
   
 
 
