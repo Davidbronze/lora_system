@@ -67,7 +67,8 @@ void loop() {
       while (client.connected()) {            // loop while the client's connected
           if (client.available()) {             // if there's bytes to read from the client,
             String req = client.readStringUntil('\r');
-            if (req.length() == 1 && req[0] == '\n'){          
+            if (req.length() == 1 && req[0] == '\n'){
+              Serial.println(req);          
                   client.println("HTTP/1.1 200 OK");
                   client.println("Content-type:text/html");
                   client.println();
@@ -125,12 +126,14 @@ void loop() {
 //  s += ((stat1)?"on ":" off ") + ((stat2)?"on ":"off ") + ((stat3)?"on ":"off ") + ((stat4)?"on ":"off ");
 //  s += "</html>\n";
 //  // Send the response to the client
-//  client.print (s);
+  client.print ("HTTP/1.1 400 OK");
   delay (100);
 
-//Fecha a conexao
-client.stop();
-Serial.println("comandos enviados");
         }
     }
+          //Fecha a conexao
+      req = "";
+      client.flush();
+      client.stop();
+      Serial.println("comandos enviados");
  }
