@@ -14,7 +14,7 @@
 //#define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "teste1"
+#define  SSID     "teste1-subst"
 #define  PASSWORD "12345678"
 const char* ssid = SSID;
 const char* password = PASSWORD;

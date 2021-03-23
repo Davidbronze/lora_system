@@ -1,7 +1,7 @@
 //SERVER (Gateway remoto)
 //placa Heltec LoRa v2
 
-#include <HTTPClient.h>
+//#include <HTTPClient.h>
 #include <DHT.h>
 #include <heltec.h>
 #include <TaskScheduler.h>
@@ -150,7 +150,7 @@ void refreshDisplay() {
         //Exibe o estado atual do relê
         Heltec.display->drawString(0, 0, currentState);
         //Exibe o ip deste esp para ser utilizado no aplicativo
-        Heltec.display->drawString(0, 15, myIP.toString());
+        Heltec.display->drawString(0, 25, myIP.toString());
         Heltec.display->display();
       }
 
@@ -257,49 +257,25 @@ bool verifyDestiny(String state) {
 
 //Função que envia mensagem para o endpoint - module relay
 void sendToEnd(String msg) {
-  const char* host = "http://192.168.4.151/";
-<<<<<<< HEAD
+  const char* host = "http://192.168.4.151";
   String endPointcmd = host + msg;
-  if ((WiFi.status() == WL_CONNECTED)){
-    HTTPClient http;
-    Serial.println("5 sendToEnd iniciado: " + endPointcmd);
-    delay(5000);  
-    http.begin("http://192.168.4.151/relay1On");
-    int httpCode = http.GET();
-    Serial.println("6 Tentando enviar ao endpoint ");
-    delay(5000);
-    if(httpCode > 0){
-        Serial.println("7 comando enviado ao endpoint");
-        Serial.println(http.getString());
+      if ((WiFi.status() == WL_CONNECTED)){
+        Serial.println("5 sendToEnd inciado");
         delay(5000);
-        http.end();
-        return;       
-      }
-      else {
-        Serial.println("7 falha na conexão com endpoint " + httpCode);
-        
-        delay(5000);
-      }
-    }
-  }  
-=======
-  if ((WiFi.status() == WL_CONNECTED)){
-    
-    Serial.println("5 sendToEnd inciado");   
-    String endPointcmd = host + msg;
-    delay(5000);
-    if (!client.connect(host, port)) {
-        Serial.println("connection failed");
-        return;
-    }
-    // This will send the request to the server
-    client.print(String("GET ") + msg + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "Connection: close\r\n\r\n");
-     while(client.available()) {
-        String line = client.readStringUntil('\r');
-        Serial.print(line);
-    }
+        if (!client.connect(host, port)) {
+            Serial.println("6 connection failed");
+            delay(5000);
+            return;
+           }
+        // This will send the request to the server
+        client.print(String("GET ") + msg + " HTTP/1.1\r\n" +
+                     "Host: " + host + "\r\n" +
+                     "Connection: close\r\n\r\n");
+         while(client.available()) {
+            String line = client.readStringUntil('\r');
+            Serial.print("7 Recebido do endpoint:  " + line);
+            delay(5000);
+        }
     
 //    HTTPClient http;
 //    http.begin(endPointcmd);
@@ -317,8 +293,6 @@ void sendToEnd(String msg) {
 //         }
     }
 }
->>>>>>> 5138d14ee566ff997f587b64473d363abd8d70a8
-  
 
 
 //Envia um pacote LoRa
