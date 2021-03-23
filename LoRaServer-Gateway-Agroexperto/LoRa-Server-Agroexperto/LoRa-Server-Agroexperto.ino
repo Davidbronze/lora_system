@@ -1,4 +1,3 @@
-
 //SERVER (Gateway remoto)
 //placa Heltec LoRa v2
 
@@ -256,7 +255,7 @@ bool verifyDestiny(String state) {
        Serial.println("3 o comando não é para este esp");             
        }
 
-//Função que envia mensagem para o endpoint
+//Função que envia mensagem para o endpoint - module relay
 void sendToEnd(String msg) {
   const char* host = "http://192.168.4.151/";
 <<<<<<< HEAD
@@ -285,23 +284,37 @@ void sendToEnd(String msg) {
   }  
 =======
   if ((WiFi.status() == WL_CONNECTED)){
-    HTTPClient http;
+    
     Serial.println("5 sendToEnd inciado");   
     String endPointcmd = host + msg;
     delay(5000);
-    http.begin(endPointcmd);
-    Serial.println("6 Tentando enviar ao endpoint");
-    delay(5000);
-        int httpCode = http.GET();
-        if(httpCode>0){
-            Serial.println("7 comando enviado ao endpoint");
-            Serial.println(httpCode);
-            delay(5000);
-            return;       
-            }
-         else {
-          Serial.println("7 sending to endpoint failed");
-         }
+    if (!client.connect(host, port)) {
+        Serial.println("connection failed");
+        return;
+    }
+    // This will send the request to the server
+    client.print(String("GET ") + msg + " HTTP/1.1\r\n" +
+                 "Host: " + host + "\r\n" +
+                 "Connection: close\r\n\r\n");
+     while(client.available()) {
+        String line = client.readStringUntil('\r');
+        Serial.print(line);
+    }
+    
+//    HTTPClient http;
+//    http.begin(endPointcmd);
+//    Serial.println("6 Tentando enviar ao endpoint");
+//    delay(5000);    
+//        int httpCode = http.GET();
+//        if(httpCode>0){
+//            Serial.println("7 comando enviado ao endpoint");
+//            Serial.println(httpCode);
+//            delay(5000);
+//            return;       
+//            }
+//         else {
+//          Serial.println("7 sending to endpoint failed");
+//         }
     }
 }
 >>>>>>> 5138d14ee566ff997f587b64473d363abd8d70a8
