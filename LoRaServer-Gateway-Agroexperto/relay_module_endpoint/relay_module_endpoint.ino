@@ -3,18 +3,11 @@
  *  AGROEXPERTO - RECEIVER - RELAY MODULE
  */
 
+
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
+#include <espnow.h>
 
-const char* ssid = "teste1";
-const char* password = "12345678";
-WiFiServer server (80);
-
-IPAddress IP(192, 168, 4, 151);
-IPAddress gateway(192,168,4,1);
-IPAddress subnet ( 255, 255, 255, 0 );
-
-  //Hex command to send to serial for close relay 1
+//Hex command to send to serial for close relay 1
   byte re1ON[]  = {0xA0, 0x01, 0x00, 0xA1};
 
   //Hex command to send to serial for open relay 1
@@ -38,104 +31,127 @@ IPAddress subnet ( 255, 255, 255, 0 );
   //Hex command to send to serial for open relay 4
   byte re4OFF[] = {0xA0, 0x04, 0x01, 0xA5};
 
-void setup ()
-{
-  delay (100);
-  Serial.begin (115200);
-  Serial.println();
-  Serial.print("Setting soft-AP configuration ... ");
-  Serial.print("Setting soft-AP ... ");
-  WiFi.softAPConfig(IP, gateway, subnet);
-  Serial.println(WiFi.softAP(ssid, password) ? "Ready" : "Failed!"); // (”ssid”, “password”) do AP
-  Serial.print("Server em: ");
-  Serial.println(WiFi.softAPIP());
-  Serial.println(WiFi.macAddress()); //macAdress do meu esp01 é C8:2B:96:2F:D7:D2
-  server.begin();
-  delay(50);
+// REPLACE WITH THE MAC Address of your receiver 
+uint8_t broadcastAddress[] = {0x7C,0x9E,0xBD,0xFC,0x19,0x04}; //mac do remote
 
-}
 
-void loop() {   
-        // Check if a client has connected
-        WiFiClient client = server.available();
-        if (! client == true ) {
-          return;
-        }   
-        Serial.println("Novo cliente conectou");
-        client.setTimeout(5000); // default is 1000
-        
-        // Read the first line of the request
-            String req = "";
-            while (client.connected()) {                   // loop while the client's connected
-                if (client.available()) {                  // if there's bytes to read from the client,
-                  String req = client.readStringUntil('\r');            
-                    Serial.println(req);         
-                    client.println("HTTP/1.1 200 OK");
-                    client.println();
-        
-        //alterar esta parte do código para inserir os comandos dos outros relays
-      
-        //int stat1;
-        //int stat2;
-        //int stat3;
-        //int stat4;
-        
-        if (req.indexOf ("relay1On") != -1)      //relay 1 on
+// Define variable to store relay state to be sent
+String deliverState;
+
+// Define variable to store incoming comand
+String incomingCmd;
+
+
+// Variable to store if sending data was successful
+String succesfully;
+
+
+// Callback when data is sent
+void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
+      Serial.print("Last Packet Send Status: ");
+      if (sendStatus == 0){
+        Serial.println("Delivery success");
+      }
+      else{
+        Serial.println("Delivery fail");
+      }
+    }
+
+// Callback when data is received
+void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
+      memcpy(&incomingCmd, incomingData, sizeof(incomingCmd));
+      Serial.print("Bytes received: ");
+      Serial.println(len);
+      Serial.println(incomingCmd);
+    }
+
+void getRelays(String cmd){
+  // change relays status
+  if (cmd.indexOf ("relay1On") != -1)      //relay 1 on
         {
           Serial.write (re1ON, sizeof(re1ON));
           Serial.println("Relay 1 On ");
-             // stat1 = 1; // if you want feedback see below
+             deliverState = "Relay 1 On";
         }
-        else if (req.indexOf ("relay1Off") != -1) //relay 1 off
+        else if (cmd.indexOf ("relay1Off") != -1) //relay 1 off
         {
             Serial.write (re1OFF, sizeof(re1OFF));      
            // stat1 = 0; // if you want feedback
         }
-         else if (req.indexOf ("relay2On") != -1) //relay 2 on
+         else if (cmd.indexOf ("relay2On") != -1) //relay 2 on
         {
             Serial.write (re2ON, sizeof(re2ON));      
            // stat2 = 1; // if you want feedback
         }
-         else if (req.indexOf ("relay2Off") != -1)  //relay 2 off
+         else if (cmd.indexOf ("relay2Off") != -1)  //relay 2 off
         {
             Serial.write (re2OFF, sizeof(re2OFF));      
            // stat3 = 0; // if you want feedback
         }
-        else if (req.indexOf ("relay3On") != -1) //relay 3 on
+        else if (cmd.indexOf ("relay3On") != -1) //relay 3 on
         {
             Serial.write (re3ON, sizeof(re3ON));      
            // stat3 = 1; // if you want feedback
         }
-         else if (req.indexOf ("relay3Off") != -1) //relay 3 off
+         else if (cmd.indexOf ("relay3Off") != -1) //relay 3 off
         {
             Serial.write (re3OFF, sizeof(re3OFF));
           //  stat3 = 0; // if you want feedback
         }
-        else if (req.indexOf ("relay4On") != -1) //relay 4 on
+        else if (cmd.indexOf ("relay4On") != -1) //relay 4 on
         {
             Serial.write (re4ON, sizeof(re4ON));
           //  stat4 = 1; // if you want feedback
         }
-         else if (req.indexOf ("relay4Off") != -1) //relay 4 off
+         else if (cmd.indexOf ("relay4Off") != -1) //relay 4 off
         {
             Serial.write (re4OFF, sizeof(re4OFF));
            // stat4 = 0; // if you want feedback
         }
-      
-      
-      //  s += ((stat1)?"on ":" off ") + ((stat2)?"on ":"off ") + ((stat3)?"on ":"off ") + ((stat4)?"on ":"off ");
-      //  s += "</html>\n";
-      //  // Send the response to the client
   
+}
 
+void printIncomingReadings(){
+        // Display Readings in Serial Monitor
+        Serial.println("INCOMING READINGS");
+        Serial.print("Comando: ");
+        Serial.print(incomingCmd);  
+      }
+ 
+void setup() {
+        // Init Serial Monitor
+        Serial.begin(115200);
+        
+        // Set device as a Wi-Fi Station
+        WiFi.mode(WIFI_STA);
+        WiFi.disconnect();
+      
+        // Init ESP-NOW
+        if (esp_now_init() != 0) {
+          Serial.println("Error initializing ESP-NOW");
+          return;
         }
-      client.print ("HTTP/1.1 400 OK");
-      delay (100);
-    }
-    
-          //Fecha a conexao
-      req = "";
-      client.flush();
-      client.stop();
-      Serial.println("comandos enviados");
- }
+      
+        // Set ESP-NOW Role
+        esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
+      
+        // Once ESPNow is successfully Init, we will register for Send CB to
+        // get the status of Trasnmitted packet
+        esp_now_register_send_cb(OnDataSent);
+        
+        // Register peer
+        esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
+        
+        // Register for a callback function that will be called when data is received
+        esp_now_register_recv_cb(OnDataRecv);
+      }
+ 
+void loop() {  
+         getRelays(incomingCmd);
+      
+          // Send message via ESP-NOW
+          esp_now_send(broadcastAddress, (uint8_t *) &deliverState, sizeof(deliverState));
+      
+          // Print incoming readings
+          printIncomingReadings();
+        }

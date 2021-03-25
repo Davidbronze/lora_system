@@ -7,6 +7,7 @@
 #include <TaskScheduler.h>
 #include <vector>
 #include <WiFi.h>
+#include <esp_now.h>
 
 //Frequência
 #define BAND 915E6
@@ -27,7 +28,9 @@
   IPAddress subnet ( 255, 255, 255, 0 );
   IPAddress server(192, 168, 4, 151);
   const char* serverNameTemp = "";
-  
+
+  //ESPNOW
+  uint8_t macSlaves[] = {0xC8,0x2B,0x96,0x2F,0xD7,0xD2}; //mac do endpoint
 
 //define e inicializa as variáveis
 int minima = 99;
@@ -75,6 +78,7 @@ String stationCode = "SP200"; //id da estação - alterar e conferir depois de d
 
 //Variável para guardar o valor do estado atual do relê 
 String currentState = ID_OFF;
+String success;
 
 void setup() {
         //Coloca tudo em maiúsculo
@@ -91,13 +95,57 @@ void setup() {
       
         //Ativa o recebimento e envio de pacotes lora
         LoRa.receive();
+
+        Serial.println(WiFi.macAddress()); //macaddress deste esp: 7C:9E:BD:FC:19:04
       
         //Se conecta à rede WiFi
-        setupWiFi();  
+        setupWiFi();
+
+        setupESPNOW();
       
         //Inicializa o agendador de tarefas
        // scheduler.startNow();
       }
+
+
+// Callback when data is sent
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+        Serial.print("\r\nLast Packet Send Status:\t");
+        Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+        if (status ==0){
+          success = "Delivery Success :)";
+        }
+        else{
+          success = "Delivery Fail :(";
+        }
+      }      
+
+void setupESPNOW(){
+        // Init ESP-NOW
+        if (esp_now_init() != ESP_OK) {
+          Serial.println("Error initializing ESP-NOW");
+          return;
+        }
+        // Once ESPNow is successfully Init, we will register for Send CB to
+        // get the status of Trasnmitted packet
+        esp_now_register_send_cb(OnDataSent);
+        
+        // Register peer
+        esp_now_peer_info_t peerInfo;
+        memcpy(peerInfo.peer_addr, macSlaves, 6);
+        peerInfo.channel = 0;  
+        peerInfo.encrypt = false;
+        
+        // Add peer        
+        if (esp_now_add_peer(&peerInfo) != ESP_OK){
+          Serial.println("Failed to add peer");
+          return;
+        }
+        // Register for a callback function that will be called when data is received
+        esp_now_register_recv_cb(OnDataRecv);
+      }
+
+
 
 //Inicializa o display
 void setupDisplay() {
@@ -118,6 +166,7 @@ void setupDisplay() {
 void setupWiFi() {
         Serial.print("Conectando");    
         //Faz o ESP se conectar à rede WiFi
+        WiFi.mode(WIFI_STA);
         WiFi.config (staticIP, gateway, subnet);
         WiFi.begin(ssid, password);    
         //Enquanto o ESP não se conectar à rede
@@ -135,7 +184,7 @@ void setupWiFi() {
         //Objeto que vamos utilizar para guardar o ip recebido
         myIP = WiFi.localIP();
         //Mostra o ip no monitor serial
-        Serial.println(myIP);    
+        Serial.println(myIP);           
         //Atualiza o display para exibir o ip
         refreshDisplay("conectado");
         }
@@ -259,62 +308,17 @@ bool verifyDestiny(String state) {
 //Função que envia mensagem para o endpoint - module relay
 void sendToEnd(String msg) {
   String payload = "";
-      if ((WiFi.status() == WL_CONNECTED)){
-          HTTPClient http;
-          //Instancia cliente wifi
-          WiFiClient client;
-          Serial.println("5 sendToEnd inciado");
-          delay(5000);
-          const char* host = "http://192.168.4.151/";
-          String endPointcmd = host + msg;
-          http.begin (client, endPointcmd);
-          int httpResponseCode = http.GET();
-          Serial.println("6 Tentando enviar ao endpoint");
-          if (httpResponseCode>0) {
-          Serial.print("HTTP Response code: ");
-          Serial.println(httpResponseCode);
-          payload = http.getString();
-          Serial.println("7 enviando ao enpoint");
-          Serial.println(payload);
-          delay(5000);
-          }
-          else {
-            Serial.print("7 falha na conexão com endpoint");
-            Serial.println(httpResponseCode);
-            delay(5000);
-          }
-          http.end();         
-      
-//          if ((WiFi.status() == WL_CONNECTED)){
-//            Serial.println("5 sendToEnd inciado");
-//            delay(5000);
-//            Serial.println("6 Tentando enviar ao endpoint");
-//            
-//            if (!client.connect(host, port)) {
-//              Serial.println("7 falha na conexão com endpoint");
-//              delay(5000);
-//              return;
-//              }          
-//              // This will send a string to the server
-//              Serial.println("7 enviando ao enpoint");
-//              if (client.connected()) {
-//                client.println(msg);
-//              }           
-//              // Read  the reply from server and print them to Serial
-//              Serial.println("receiving from remote server");
-//              // not testing 'client.connected()' since we do not need to send data here
-//              while (client.available()) {
-//                char ch = static_cast<char>(client.read());
-//                Serial.print(ch);
-//              }
-//            
-//              // Close the connection
-//              Serial.println();
-//              Serial.println("closing connection");
-//              client.stop();        
-            //  http.end();
-                    }
-              }
+      esp_err_t result = esp_now_send(macSlaves, (uint8_t *) &msg, sizeof(msg));         
+        if (result == ESP_OK) {
+          Serial.println("Sent with success");
+        }
+        else {
+          Serial.println("Error sending the data");
+        }
+        refreshDisplay(msg);
+        delay(5000);
+      }
+     
 
 
 //Envia um pacote LoRa
