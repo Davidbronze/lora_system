@@ -63,60 +63,73 @@ void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
       Serial.print("Bytes received: ");
       Serial.println(len);
       Serial.println(incomingCmd);
+      getRelays(incomingCmd);
     }
 
 void getRelays(String cmd){
   // change relays status
-  if (cmd.indexOf ("relay1On") != -1)      //relay 1 on
+      if (cmd = 1)      //relay 1 on
         {
           Serial.write (re1ON, sizeof(re1ON));
           Serial.println("Relay 1 On ");
              deliverState = "Relay 1 On";
         }
-        else if (cmd.indexOf ("relay1Off") != -1) //relay 1 off
-        {
-            Serial.write (re1OFF, sizeof(re1OFF));      
-           // stat1 = 0; // if you want feedback
-        }
-         else if (cmd.indexOf ("relay2On") != -1) //relay 2 on
-        {
-            Serial.write (re2ON, sizeof(re2ON));      
-           // stat2 = 1; // if you want feedback
-        }
-         else if (cmd.indexOf ("relay2Off") != -1)  //relay 2 off
-        {
-            Serial.write (re2OFF, sizeof(re2OFF));      
-           // stat3 = 0; // if you want feedback
-        }
-        else if (cmd.indexOf ("relay3On") != -1) //relay 3 on
-        {
-            Serial.write (re3ON, sizeof(re3ON));      
-           // stat3 = 1; // if you want feedback
-        }
-         else if (cmd.indexOf ("relay3Off") != -1) //relay 3 off
-        {
-            Serial.write (re3OFF, sizeof(re3OFF));
-          //  stat3 = 0; // if you want feedback
-        }
-        else if (cmd.indexOf ("relay4On") != -1) //relay 4 on
-        {
-            Serial.write (re4ON, sizeof(re4ON));
-          //  stat4 = 1; // if you want feedback
-        }
-         else if (cmd.indexOf ("relay4Off") != -1) //relay 4 off
-        {
-            Serial.write (re4OFF, sizeof(re4OFF));
-           // stat4 = 0; // if you want feedback
-        }
-  
 }
 
-void printIncomingReadings(){
-        // Display Readings in Serial Monitor
-        Serial.println("INCOMING READINGS");
-        Serial.print("Comando: ");
-        Serial.print(incomingCmd);  
-      }
+
+
+//void getRelays(String cmd){
+//  // change relays status
+//  if (cmd.indexOf ("relay1On") != -1)      //relay 1 on
+//        {
+//          Serial.write (re1ON, sizeof(re1ON));
+//          Serial.println("Relay 1 On ");
+//             deliverState = "Relay 1 On";
+//        }
+//        else if (cmd.indexOf ("relay1Off") != -1) //relay 1 off
+//        {
+//            Serial.write (re1OFF, sizeof(re1OFF));      
+//           // stat1 = 0; // if you want feedback
+//        }
+//         else if (cmd.indexOf ("relay2On") != -1) //relay 2 on
+//        {
+//            Serial.write (re2ON, sizeof(re2ON));      
+//           // stat2 = 1; // if you want feedback
+//        }
+//         else if (cmd.indexOf ("relay2Off") != -1)  //relay 2 off
+//        {
+//            Serial.write (re2OFF, sizeof(re2OFF));      
+//           // stat3 = 0; // if you want feedback
+//        }
+//        else if (cmd.indexOf ("relay3On") != -1) //relay 3 on
+//        {
+//            Serial.write (re3ON, sizeof(re3ON));      
+//           // stat3 = 1; // if you want feedback
+//        }
+//         else if (cmd.indexOf ("relay3Off") != -1) //relay 3 off
+//        {
+//            Serial.write (re3OFF, sizeof(re3OFF));
+//          //  stat3 = 0; // if you want feedback
+//        }
+//        else if (cmd.indexOf ("relay4On") != -1) //relay 4 on
+//        {
+//            Serial.write (re4ON, sizeof(re4ON));
+//          //  stat4 = 1; // if you want feedback
+//        }
+//         else if (cmd.indexOf ("relay4Off") != -1) //relay 4 off
+//        {
+//            Serial.write (re4OFF, sizeof(re4OFF));
+//           // stat4 = 0; // if you want feedback
+//        }
+//  
+//}
+
+//void printIncomingReadings(){
+//        // Display Readings in Serial Monitor
+//        Serial.println("INCOMING READINGS");
+//        Serial.print("Comando: ");
+//        Serial.print(incomingCmd);  
+//      }
  
 void setup() {
         // Init Serial Monitor
@@ -125,6 +138,10 @@ void setup() {
         // Set device as a Wi-Fi Station
         WiFi.mode(WIFI_STA);
         WiFi.disconnect();
+        Serial.println();
+        Serial.print("Modulo relay macaddress: ");
+        Serial.println(WiFi.macAddress());
+
       
         // Init ESP-NOW
         if (esp_now_init() != 0) {
@@ -140,18 +157,12 @@ void setup() {
         esp_now_register_send_cb(OnDataSent);
         
         // Register peer
-        esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
+        esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_COMBO, 0, NULL, 0);
         
         // Register for a callback function that will be called when data is received
         esp_now_register_recv_cb(OnDataRecv);
       }
  
 void loop() {  
-         getRelays(incomingCmd);
-      
-          // Send message via ESP-NOW
-          esp_now_send(broadcastAddress, (uint8_t *) &deliverState, sizeof(deliverState));
-      
-          // Print incoming readings
-          printIncomingReadings();
+         
         }

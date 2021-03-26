@@ -79,6 +79,7 @@ String stationCode = "SP200"; //id da estação - alterar e conferir depois de d
 //Variável para guardar o valor do estado atual do relê 
 String currentState = ID_OFF;
 String success;
+String incomingReadings;
 
 void setup() {
         //Coloca tudo em maiúsculo
@@ -96,12 +97,15 @@ void setup() {
         //Ativa o recebimento e envio de pacotes lora
         LoRa.receive();
 
-        Serial.println(WiFi.macAddress()); //macaddress deste esp: 7C:9E:BD:FC:19:04
+        WiFi.mode(WIFI_STA);
+
+        Serial.println("macaddress do remote: " + WiFi.macAddress()); //macaddress deste esp: 7C:9E:BD:FC:19:04
       
         //Se conecta à rede WiFi
-        setupWiFi();
+      //  setupWiFi();
 
         setupESPNOW();
+        delay(5000);
       
         //Inicializa o agendador de tarefas
        // scheduler.startNow();
@@ -118,17 +122,29 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
         else{
           success = "Delivery Fail :(";
         }
-      }      
+      }
+
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+        memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
+        Serial.print("Bytes received: ");
+        Serial.println(len);
+        Serial.println(incomingReadings);        
+    }
+
+
 
 void setupESPNOW(){
         // Init ESP-NOW
+        Serial.println("iniciando espnow...");
+        delay(5000);
         if (esp_now_init() != ESP_OK) {
           Serial.println("Error initializing ESP-NOW");
           return;
         }
-        // Once ESPNow is successfully Init, we will register for Send CB to
-        // get the status of Trasnmitted packet
-        esp_now_register_send_cb(OnDataSent);
+        else if (esp_now_init() == ESP_OK) {
+          Serial.println("initialized ESP-NOW");
+          return;
+        }
         
         // Register peer
         esp_now_peer_info_t peerInfo;
@@ -141,8 +157,14 @@ void setupESPNOW(){
           Serial.println("Failed to add peer");
           return;
         }
+
+        // Once ESPNow is successfully Init, we will register for Send CB to
+        // get the status of Trasnmitted packet
+        esp_now_register_send_cb(OnDataSent);
+        
         // Register for a callback function that will be called when data is received
         esp_now_register_recv_cb(OnDataRecv);
+        delay(5000);
       }
 
 
@@ -163,43 +185,45 @@ void setupDisplay() {
         Heltec.display->display();
         }
 
-void setupWiFi() {
-        Serial.print("Conectando");    
-        //Faz o ESP se conectar à rede WiFi
-        WiFi.mode(WIFI_STA);
-        WiFi.config (staticIP, gateway, subnet);
-        WiFi.begin(ssid, password);    
-        //Enquanto o ESP não se conectar à rede
-        byte count = 0;
-          while (WiFi.status() != WL_CONNECTED && count < 50) {
-              count ++; //fazemos "count" tentativas
-              //Esperamos 100 milisegundos
-              delay(100);
-              Serial.print(".");
-              }
-        if(WiFi.status() == WL_CONNECTED){
-          //Se chegou aqui é porque conectou à rede, então mostramos no monitor serial para termos um feedback
-        Serial.println("");
-        Serial.println("Conectou");    
-        //Objeto que vamos utilizar para guardar o ip recebido
-        myIP = WiFi.localIP();
-        //Mostra o ip no monitor serial
-        Serial.println(myIP);           
-        //Atualiza o display para exibir o ip
-        refreshDisplay("conectado");
-        }
-        else{
-          return;        
-        }
-      }
+//void setupWiFi() {
+//        Serial.print("Conectando");    
+//        //Faz o ESP se conectar à rede WiFi
+//        WiFi.mode(WIFI_STA);
+//        WiFi.config (staticIP, gateway, subnet);
+//        WiFi.begin(ssid, password);    
+//        //Enquanto o ESP não se conectar à rede
+//        byte count = 0;
+//          while (WiFi.status() != WL_CONNECTED && count < 50) {
+//              count ++; //fazemos "count" tentativas
+//              //Esperamos 100 milisegundos
+//              delay(100);
+//              Serial.print(".");
+//              }
+//        if(WiFi.status() == WL_CONNECTED){
+//          //Se chegou aqui é porque conectou à rede, então mostramos no monitor serial para termos um feedback
+//        Serial.println("");
+//        Serial.println("Conectou");    
+//        //Objeto que vamos utilizar para guardar o ip recebido
+//        myIP = WiFi.localIP();
+//        //Mostra o ip no monitor serial
+//        Serial.println(myIP);           
+//        //Atualiza o display para exibir o ip
+//        refreshDisplay("conectado");
+//        }
+//        else{
+//          return;        
+//        }
+//      }
 
 void refreshDisplay(String connection) {
         //Limpa o display
         Heltec.display->clear();
         //Exibe o estado atual do relê
+        Heltec.display->setFont(ArialMT_Plain_16);
         Heltec.display->drawString(0, 0, currentState);
         //Exibe o ip deste esp para ser utilizado no aplicativo
         Heltec.display->drawString(0, 25, myIP.toString());
+        Heltec.display->setFont(ArialMT_Plain_10);
         Heltec.display->drawString(0, 45, connection);
         Heltec.display->display();
       }
@@ -255,7 +279,6 @@ String readLoRaPacket() {
       for (int i = 0; i < packetSize; i++) { 
         packet += (char) LoRa.read(); 
       }
-      Serial.println("1 " + packet);
       return packet;
     }
 
@@ -266,7 +289,7 @@ void handleCommand(String cmd){
         return;         
       // Exibimos o comando recebido no monitor serial
       delay(5000);
-      Serial.println("2 Received from Gateway: " + cmd);    
+      Serial.println("1 Received from Gateway: " + cmd);    
       //Verifica se a mensagem é para este esp
       bool forMe = verifyDestiny(cmd);    
       //Se a mensagem é para este esp
@@ -277,13 +300,13 @@ void handleCommand(String cmd){
               //Envia mensagem de confirmaçao de volta para o gateway
               String confirmationMessage = ID + " OK";
               sendLoRaPacket(confirmationMessage);
-              Serial.println("4 Changed Relay status: " + confirmationMessage);
+              Serial.println("3 Changed Relay status: " + confirmationMessage);
             }
         //Se  é para o endpoint
         else {
           //Envia o comando para o endpoint
           digitalWrite(25, HIGH);
-          Serial.println("4 comando deve ser enviado para o endpoint");
+          Serial.println("3 comando deve ser enviado para o endpoint");
           delay(5000);
          sendToEnd(cmd);
         }
@@ -297,23 +320,29 @@ bool verifyDestiny(String state) {
       if (state.indexOf("REMOTE1") != -1) {          
               refreshDisplay("recebido");
               delay(5000);
-              Serial.println("3 o comando é para este esp"); 
+              Serial.println("2 o comando é para este esp"); 
               return true;                       
                }
        return false;
-       Serial.println("3 o comando não é para este esp");
+       Serial.println("2 o comando não é para este esp");
        refreshDisplay("repassado");             
        }
 
+
 //Função que envia mensagem para o endpoint - module relay
 void sendToEnd(String msg) {
-  String payload = "";
-      esp_err_t result = esp_now_send(macSlaves, (uint8_t *) &msg, sizeof(msg));         
+  uint8_t comando;
+  if (msg.indexOf ("relay1On") != -1)      //relay 1 on
+        {
+         comando = 1;
+         Serial.println("5 comando com o valor 1 = ligar relay 1");
+        }  
+      esp_err_t result = esp_now_send(macSlaves, (uint8_t *) &comando, sizeof(comando));
         if (result == ESP_OK) {
-          Serial.println("Sent with success");
+          Serial.println("6 Sent with success");
         }
         else {
-          Serial.println("Error sending the data");
+          Serial.println("6 Error sending the data");
         }
         refreshDisplay(msg);
         delay(5000);
