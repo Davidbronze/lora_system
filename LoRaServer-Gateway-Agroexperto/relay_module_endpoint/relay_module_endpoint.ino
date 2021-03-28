@@ -5,7 +5,9 @@
 
 
 #include <ESP8266WiFi.h>
+extern "C" {
 #include <espnow.h>
+}
 
 //Hex command to send to serial for close relay 1
   byte re1ON[]  = {0xA0, 0x01, 0x00, 0xA1};
@@ -39,7 +41,7 @@ uint8_t broadcastAddress[] = {0x7C,0x9E,0xBD,0xFC,0x19,0x04}; //mac do remote
 String deliverState;
 
 // Define variable to store incoming comand
-String incomingCmd;
+uint8_t incomingCmd[1];
 
 
 // Variable to store if sending data was successful
@@ -58,15 +60,16 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
     }
 
 // Callback when data is received
-void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
+void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
       memcpy(&incomingCmd, incomingData, sizeof(incomingCmd));
       Serial.print("Bytes received: ");
+      uint8_t cmd = incomingCmd[0];
       Serial.println(len);
-      Serial.println(incomingCmd);
-      getRelays(incomingCmd);
+      Serial.println(cmd);
+      getRelays(cmd);
     }
 
-void getRelays(String cmd){
+void getRelays(uint8_t cmd){
   // change relays status
       if (cmd = 1)      //relay 1 on
         {
@@ -137,7 +140,6 @@ void setup() {
         
         // Set device as a Wi-Fi Station
         WiFi.mode(WIFI_STA);
-        WiFi.disconnect();
         Serial.println();
         Serial.print("Modulo relay macaddress: ");
         Serial.println(WiFi.macAddress());
@@ -145,19 +147,20 @@ void setup() {
       
         // Init ESP-NOW
         if (esp_now_init() != 0) {
+          delay(5000);
           Serial.println("Error initializing ESP-NOW");
-          return;
-        }
+          ESP.restart();
+        } 
       
         // Set ESP-NOW Role
         esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
+
+        // Register peer
+        esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_COMBO, 0, NULL, 0);
       
         // Once ESPNow is successfully Init, we will register for Send CB to
         // get the status of Trasnmitted packet
         esp_now_register_send_cb(OnDataSent);
-        
-        // Register peer
-        esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_COMBO, 0, NULL, 0);
         
         // Register for a callback function that will be called when data is received
         esp_now_register_recv_cb(OnDataRecv);

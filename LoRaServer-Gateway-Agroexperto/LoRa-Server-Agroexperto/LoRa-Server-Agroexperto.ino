@@ -331,19 +331,21 @@ bool verifyDestiny(String state) {
 
 //Função que envia mensagem para o endpoint - module relay
 void sendToEnd(String msg) {
-  uint8_t comando;
+  uint8_t comando[1];
   if (msg.indexOf ("relay1On") != -1)      //relay 1 on
         {
-         comando = 1;
+         comando[0] = 1;
          Serial.println("5 comando com o valor 1 = ligar relay 1");
-        }  
+          
       esp_err_t result = esp_now_send(macSlaves, (uint8_t *) &comando, sizeof(comando));
         if (result == ESP_OK) {
-          Serial.println("6 Sent with success");
+          Serial.println("6 success sending the data");
         }
         else {
-          Serial.println("6 Error sending the data");
+          Serial.print("6 error sending:  ");
+          Serial.println(result);
         }
+    }
         refreshDisplay(msg);
         delay(5000);
       }
