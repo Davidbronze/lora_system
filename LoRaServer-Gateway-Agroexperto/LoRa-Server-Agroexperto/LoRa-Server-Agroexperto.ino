@@ -135,6 +135,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
 void setupESPNOW(){
         // Init ESP-NOW
+        WiFi.disconnect();
         Serial.println("iniciando espnow...");
         delay(5000);
         if (esp_now_init() != ESP_OK) {
@@ -157,11 +158,7 @@ void setupESPNOW(){
           Serial.println("Failed to add peer");
           return;
         }
-
-        // Once ESPNow is successfully Init, we will register for Send CB to
-        // get the status of Trasnmitted packet
-        esp_now_register_send_cb(OnDataSent);
-        
+         
         // Register for a callback function that will be called when data is received
         esp_now_register_recv_cb(OnDataRecv);
         delay(5000);
@@ -331,13 +328,17 @@ bool verifyDestiny(String state) {
 
 //Função que envia mensagem para o endpoint - module relay
 void sendToEnd(String msg) {
-  uint8_t comando[1];
+  int x;
+         // Once ESPNow is successfully Init, we will register for Send CB to
+        // get the status of Trasnmitted packet
+        esp_now_register_send_cb(OnDataSent);
+        
   if (msg.indexOf ("relay1On") != -1)      //relay 1 on
         {
-         comando[0] = 1;
+         x = 1;
          Serial.println("5 comando com o valor 1 = ligar relay 1");
           
-      esp_err_t result = esp_now_send(macSlaves, (uint8_t *) &comando, sizeof(comando));
+      esp_err_t result = esp_now_send(macSlaves, (uint8_t *) &x, sizeof(int));
         if (result == ESP_OK) {
           Serial.println("6 success sending the data");
         }

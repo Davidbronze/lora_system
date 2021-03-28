@@ -140,6 +140,7 @@ void setup() {
         
         // Set device as a Wi-Fi Station
         WiFi.mode(WIFI_STA);
+        WiFi.disconnect();
         Serial.println();
         Serial.print("Modulo relay macaddress: ");
         Serial.println(WiFi.macAddress());
@@ -150,8 +151,8 @@ void setup() {
           delay(5000);
           Serial.println("Error initializing ESP-NOW");
           ESP.restart();
-        } 
-      
+        }
+             
         // Set ESP-NOW Role
         esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
 
