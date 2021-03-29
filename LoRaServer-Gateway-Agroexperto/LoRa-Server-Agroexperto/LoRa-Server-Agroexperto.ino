@@ -114,14 +114,9 @@ void setup() {
 
 // Callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
-        Serial.print("\r\nLast Packet Send Status:\t");
+        Serial.print("Last Packet Send Status: ");
         Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
-        if (status ==0){
-          success = "Delivery Success :)";
-        }
-        else{
-          success = "Delivery Fail :(";
-        }
+        
       }
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
@@ -144,9 +139,8 @@ void setupESPNOW(){
         }
         else if (esp_now_init() == ESP_OK) {
           Serial.println("initialized ESP-NOW");
-          return;
-        }
-        
+          ;
+        }              
         // Register peer
         esp_now_peer_info_t peerInfo;
         memcpy(peerInfo.peer_addr, macSlaves, 6);
@@ -158,6 +152,11 @@ void setupESPNOW(){
           Serial.println("Failed to add peer");
           return;
         }
+      Serial.println("peer adicionado: " + esp_now_is_peer_exist(macSlaves));       
+        
+         // Once ESPNow is successfully Init, we will register for Send CB to
+        // get the status of Trasnmitted packet
+        esp_now_register_send_cb(OnDataSent);
          
         // Register for a callback function that will be called when data is received
         esp_now_register_recv_cb(OnDataRecv);
@@ -329,16 +328,14 @@ bool verifyDestiny(String state) {
 //Função que envia mensagem para o endpoint - module relay
 void sendToEnd(String msg) {
   int x;
-         // Once ESPNow is successfully Init, we will register for Send CB to
-        // get the status of Trasnmitted packet
-        esp_now_register_send_cb(OnDataSent);
-        
   if (msg.indexOf ("relay1On") != -1)      //relay 1 on
         {
          x = 1;
          Serial.println("5 comando com o valor 1 = ligar relay 1");
-          
-      esp_err_t result = esp_now_send(macSlaves, (uint8_t *) &x, sizeof(int));
+         
+      bool peerAdded = esp_now_is_peer_exist(macSlaves);
+      Serial.println(peerAdded);
+      esp_err_t result = esp_now_send(macSlaves, (uint8_t *) &x, sizeof(x));
         if (result == ESP_OK) {
           Serial.println("6 success sending the data");
         }

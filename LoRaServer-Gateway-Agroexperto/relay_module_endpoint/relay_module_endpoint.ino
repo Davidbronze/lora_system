@@ -41,7 +41,7 @@ uint8_t broadcastAddress[] = {0x7C,0x9E,0xBD,0xFC,0x19,0x04}; //mac do remote
 String deliverState;
 
 // Define variable to store incoming comand
-uint8_t incomingCmd[1];
+int incomingCmd;
 
 
 // Variable to store if sending data was successful
@@ -63,7 +63,7 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
 void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
       memcpy(&incomingCmd, incomingData, sizeof(incomingCmd));
       Serial.print("Bytes received: ");
-      uint8_t cmd = incomingCmd[0];
+      int cmd = incomingCmd;
       Serial.println(len);
       Serial.println(cmd);
       getRelays(cmd);
@@ -152,10 +152,8 @@ void setup() {
           Serial.println("Error initializing ESP-NOW");
           ESP.restart();
         }
-             
-        // Set ESP-NOW Role
-        esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
-
+        
+        
         // Register peer
         esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_COMBO, 0, NULL, 0);
       
@@ -165,6 +163,8 @@ void setup() {
         
         // Register for a callback function that will be called when data is received
         esp_now_register_recv_cb(OnDataRecv);
+
+        Serial.println("fim do setup");
       }
  
 void loop() {  
