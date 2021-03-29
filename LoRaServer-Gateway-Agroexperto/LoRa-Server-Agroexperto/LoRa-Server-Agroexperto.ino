@@ -19,18 +19,23 @@
 #define PIN_VL 36  // 36  Leitura do  Pluviômetro
 #define PL 37     //37  RST Pluviometro
 //observar que os pinos 2, 4, 5, 14, 15, 16, 19, 18, 21, 26, 27 não podem ser usados
+#define CHANNEL 3
+#define PRINTSCANRESULTS 0
+#define DELETEBEFOREPAIR 0
 
 //SSID e senha do endpoint
- const char* ssid = "teste1";
-  const char* password = "12345678";
-  IPAddress staticIP(192,168,5, 199); //IP do REMOTE
-  IPAddress gateway ( 192, 168, 1, 1);
-  IPAddress subnet ( 255, 255, 255, 0 );
-  IPAddress server(192, 168, 4, 151);
-  const char* serverNameTemp = "";
+// const char* ssid = "teste1";
+//  const char* password = "12345678";
+//  IPAddress staticIP(192,168,5, 199); //IP do REMOTE
+//  IPAddress gateway ( 192, 168, 1, 1);
+//  IPAddress subnet ( 255, 255, 255, 0 );
+//  IPAddress server(192, 168, 4, 151);
+//  const char* serverNameTemp = "";
+
 
   //ESPNOW
-  uint8_t macSlaves[] = {0xC8,0x2B,0x96,0x2F,0xD7,0xD2}; //mac do endpoint
+  uint8_t macSlaves[] = {0xCA,0x2B,0x96,0x2F,0xD7,0xD2}; //mac do endpoint
+  esp_now_peer_info_t slave;
 
 //define e inicializa as variáveis
 int minima = 99;
@@ -58,7 +63,6 @@ IPAddress myIP;
 // Porta do server que vc vai utilizar para conectar no endpoint
 const int port = 80; 
 
-
 //Tarefas para verificar novos clientes e mensagens enviadas por estes
 //Scheduler scheduler;
 //void handleWeather();
@@ -82,6 +86,7 @@ String success;
 String incomingReadings;
 
 void setup() {
+  Serial.println("=================");
         //Coloca tudo em maiúsculo
         ID_ON.toUpperCase();
         ID_OFF.toUpperCase();
@@ -97,12 +102,12 @@ void setup() {
         //Ativa o recebimento e envio de pacotes lora
         LoRa.receive();
 
-        WiFi.mode(WIFI_STA);
+        WiFi.mode(WIFI_AP);
 
         Serial.println("macaddress do remote: " + WiFi.macAddress()); //macaddress deste esp: 7C:9E:BD:FC:19:04
       
-        //Se conecta à rede WiFi
-      //  setupWiFi();
+        
+        ScanForSlave();
 
         setupESPNOW();
         delay(5000);
@@ -113,9 +118,9 @@ void setup() {
 
 
 // Callback when data is sent
-void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t situation) {
         Serial.print("Last Packet Send Status: ");
-        Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+        Serial.println(situation == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
         
       }
 
@@ -139,20 +144,29 @@ void setupESPNOW(){
         }
         else if (esp_now_init() == ESP_OK) {
           Serial.println("initialized ESP-NOW");
-          ;
-        }              
+        } 
+       
+                    
         // Register peer
-        esp_now_peer_info_t peerInfo;
-        memcpy(peerInfo.peer_addr, macSlaves, 6);
-        peerInfo.channel = 0;  
-        peerInfo.encrypt = false;
+//        esp_now_peer_info_t peerInfo;
+//        memcpy(peerInfo.peer_addr, slave, sizeof(slave));
+//        peerInfo.channel = 1;  
+//        peerInfo.encrypt = 0;
+        Serial.println(sizeof(slave.peer_addr));
+        char macStr[18];
+        snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
+           slave.peer_addr[0], slave.peer_addr[1], slave.peer_addr[2], slave.peer_addr[3], slave.peer_addr[4], slave.peer_addr[5]);
+        //Mostramos o Mac Address que foi destino da mensagem
+        Serial.print("Trying peer: "); 
+        Serial.println(macStr);
         
         // Add peer        
-        if (esp_now_add_peer(&peerInfo) != ESP_OK){
+        if (esp_now_add_peer(&slave) != ESP_OK){
           Serial.println("Failed to add peer");
           return;
         }
-      Serial.println("peer adicionado: " + esp_now_is_peer_exist(macSlaves));       
+        Serial.println(esp_now_add_peer(&slave));
+        Serial.println("  Peer adicionado: ");       
         
          // Once ESPNow is successfully Init, we will register for Send CB to
         // get the status of Trasnmitted packet
@@ -162,6 +176,64 @@ void setupESPNOW(){
         esp_now_register_recv_cb(OnDataRecv);
         delay(5000);
       }
+
+
+void ScanForSlave() {
+          int8_t scanResults = WiFi.scanNetworks();
+          // reset on each scan
+          bool slaveFound = 0;
+          memset(&slave, 0, sizeof(slave));        
+          Serial.println("");
+          if (scanResults == 0) {
+            Serial.println("No WiFi devices in AP Mode found");
+          } else {
+            Serial.print("Found "); Serial.print(scanResults); Serial.println(" devices ");
+            for (int i = 0; i < scanResults; ++i) {
+              // Print SSID and RSSI for each device found
+              String SSID = WiFi.SSID(i);
+              int32_t RSSI = WiFi.RSSI(i);
+              String BSSIDstr = WiFi.BSSIDstr(i);        
+                if (PRINTSCANRESULTS) {
+                  Serial.print(i + 1);
+                  Serial.print(": ");
+                  Serial.print(SSID);
+                  Serial.print(" (");
+                  Serial.print(RSSI);
+                  Serial.print(")");
+                  Serial.println("");
+                }
+              delay(10);
+              // Check if the current device starts with `Slave`
+              if (SSID.indexOf("teste1") == 0) {
+                // SSID of interest
+                Serial.println("Found a Slave.");
+                Serial.print(i + 1); Serial.print(": "); Serial.print(SSID); Serial.print(" ["); Serial.print(BSSIDstr); Serial.print("]"); Serial.print(" ("); Serial.print(RSSI); Serial.print(")"); Serial.println("");
+                // Get BSSID => Mac Address of the Slave
+                int mac[6];
+                if ( 6 == sscanf(BSSIDstr.c_str(), "%x:%x:%x:%x:%x:%x",  &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5] ) ) {
+                  for (int ii = 0; ii < 6; ++ii ) {
+                    slave.peer_addr[ii] = (uint8_t) mac[ii];
+                  }
+                }        
+                slave.channel = CHANNEL; // pick a channel
+                slave.encrypt = 0; // no encryption
+        
+                slaveFound = 1;
+                // we are planning to have only one slave in this example;
+                // Hence, break after we find one, to be a bit efficient
+                break;
+              }
+            }
+          }
+        
+          if (slaveFound) {
+            Serial.println("Slave Found, processing..");
+          } else {
+            Serial.println("Slave Not Found, trying again.");
+          }        
+          // clean up ram
+          WiFi.scanDelete();
+}
 
 
 
@@ -218,7 +290,7 @@ void refreshDisplay(String connection) {
         Heltec.display->setFont(ArialMT_Plain_16);
         Heltec.display->drawString(0, 0, currentState);
         //Exibe o ip deste esp para ser utilizado no aplicativo
-        Heltec.display->drawString(0, 25, myIP.toString());
+        Heltec.display->drawString(0, 25, "LoRa e ESPNOW");
         Heltec.display->setFont(ArialMT_Plain_10);
         Heltec.display->drawString(0, 45, connection);
         Heltec.display->display();
@@ -327,15 +399,13 @@ bool verifyDestiny(String state) {
 
 //Função que envia mensagem para o endpoint - module relay
 void sendToEnd(String msg) {
-  int x;
+  uint8_t x;
+  const uint8_t *peer_addr = slave.peer_addr;
   if (msg.indexOf ("relay1On") != -1)      //relay 1 on
         {
          x = 1;
          Serial.println("5 comando com o valor 1 = ligar relay 1");
-         
-      bool peerAdded = esp_now_is_peer_exist(macSlaves);
-      Serial.println(peerAdded);
-      esp_err_t result = esp_now_send(macSlaves, (uint8_t *) &x, sizeof(x));
+      esp_err_t result = esp_now_send(peer_addr, (uint8_t *) &x, sizeof(x));
         if (result == ESP_OK) {
           Serial.println("6 success sending the data");
         }

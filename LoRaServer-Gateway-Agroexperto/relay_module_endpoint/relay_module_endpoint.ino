@@ -5,9 +5,9 @@
 
 
 #include <ESP8266WiFi.h>
-extern "C" {
 #include <espnow.h>
-}
+
+#define CHANNEL 3
 
 //Hex command to send to serial for close relay 1
   byte re1ON[]  = {0xA0, 0x01, 0x00, 0xA1};
@@ -36,6 +36,8 @@ extern "C" {
 // REPLACE WITH THE MAC Address of your receiver 
 uint8_t broadcastAddress[] = {0x7C,0x9E,0xBD,0xFC,0x19,0x04}; //mac do remote
 
+const char* ssid = "teste1";
+const char* password = "12345678";
 
 // Define variable to store relay state to be sent
 String deliverState;
@@ -139,11 +141,17 @@ void setup() {
         Serial.begin(115200);
         
         // Set device as a Wi-Fi Station
-        WiFi.mode(WIFI_STA);
+        WiFi.mode(WIFI_AP);
         WiFi.disconnect();
         Serial.println();
         Serial.print("Modulo relay macaddress: ");
-        Serial.println(WiFi.macAddress());
+        bool result = WiFi.softAP(ssid, password, CHANNEL, 0);
+        if (!result) {
+            Serial.println("AP Config failed.");
+          } else {
+            Serial.println("AP Config Success. Broadcasting with AP: " + String(ssid));
+          }
+          Serial.println(WiFi.softAPmacAddress());
 
       
         // Init ESP-NOW
@@ -155,7 +163,7 @@ void setup() {
         
         
         // Register peer
-        esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_COMBO, 0, NULL, 0);
+        esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_COMBO, CHANNEL, NULL, 0);
       
         // Once ESPNow is successfully Init, we will register for Send CB to
         // get the status of Trasnmitted packet

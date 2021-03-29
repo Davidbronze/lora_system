@@ -101,7 +101,7 @@ void setupDisplay() {
       //Altera a fonte
       Heltec.display->setFont(ArialMT_Plain_16);
       //Exibe no display
-      Heltec.display->drawString(0, 0, "Display OK");
+      Heltec.display->drawString(0, 25, "Display OK");
       Heltec.display->display();
     }
 
@@ -128,23 +128,27 @@ void setupWiFi() {
           //Mostra o ip no monitor serial
           Serial.println(myIP);    
           //Atualiza o display para exibir o ip
-          refreshDisplay();
+          refreshDisplay(myIP.toString());
       }
       else {
           Heltec.display -> clear();
           Heltec.display -> drawString(0, 0, "Connecting...");
           Heltec.display -> drawString(0, 25, "...Failed");
           Heltec.display -> display();
+          delay(5000);
+          refreshDisplay("Not connected to wifi");
       }
     }
 
-void refreshDisplay() {
+void refreshDisplay(String state) {
       //Limpa o display
       Heltec.display->clear();
+      Heltec.display->setFont(ArialMT_Plain_16);
       //Exibe o estado atual do relê
       Heltec.display->drawString(0, 0, currentState);
       //Exibe o ip deste esp para ser utilizado no aplicativo
-      Heltec.display->drawString(0, 25, myIP.toString());
+      Heltec.display->setFont(ArialMT_Plain_10);
+      Heltec.display->drawString(0, 25, state);
       Heltec.display->display();
     }
 
@@ -254,6 +258,7 @@ void handleCommand(String cmd){
         // Exibimos o comando recebido no monitor serial
         Serial.println("Received from app: " + cmd);
         Serial.println();
+        refreshDisplay(cmd);
           //Envia o comando para os REMOTES através de um pacote LoRa
           sendLoRaPacket(cmd);
         }
@@ -266,4 +271,5 @@ void sendLoRaPacket(String str) {
         LoRa.print(str);
         //Finaliza e envia o pacote
         LoRa.endPacket();
+        refreshDisplay(str);
       }
