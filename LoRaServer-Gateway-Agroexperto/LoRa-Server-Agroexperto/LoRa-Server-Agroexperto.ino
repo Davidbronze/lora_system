@@ -253,35 +253,6 @@ void setupDisplay() {
         Heltec.display->display();
         }
 
-//void setupWiFi() {
-//        Serial.print("Conectando");    
-//        //Faz o ESP se conectar à rede WiFi
-//        WiFi.mode(WIFI_STA);
-//        WiFi.config (staticIP, gateway, subnet);
-//        WiFi.begin(ssid, password);    
-//        //Enquanto o ESP não se conectar à rede
-//        byte count = 0;
-//          while (WiFi.status() != WL_CONNECTED && count < 50) {
-//              count ++; //fazemos "count" tentativas
-//              //Esperamos 100 milisegundos
-//              delay(100);
-//              Serial.print(".");
-//              }
-//        if(WiFi.status() == WL_CONNECTED){
-//          //Se chegou aqui é porque conectou à rede, então mostramos no monitor serial para termos um feedback
-//        Serial.println("");
-//        Serial.println("Conectou");    
-//        //Objeto que vamos utilizar para guardar o ip recebido
-//        myIP = WiFi.localIP();
-//        //Mostra o ip no monitor serial
-//        Serial.println(myIP);           
-//        //Atualiza o display para exibir o ip
-//        refreshDisplay("conectado");
-//        }
-//        else{
-//          return;        
-//        }
-//      }
 
 void refreshDisplay(String connection) {
         //Limpa o display
