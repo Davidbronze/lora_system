@@ -65,19 +65,37 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
 void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
       memcpy(&incomingCmd, incomingData, sizeof(incomingCmd));
       Serial.print("Bytes received: ");
-      int cmd = incomingCmd;
-      Serial.println(len);
+      uint8_t cmd = incomingCmd;
+      Serial.println(incomingCmd);
       Serial.println(cmd);
       getRelays(cmd);
     }
 
 void getRelays(uint8_t cmd){
   // change relays status
-      if (cmd = 1)      //relay 1 on
+      if (cmd == 1)      //relay 1 on
         {
           Serial.write (re1ON, sizeof(re1ON));
           Serial.println("Relay 1 On ");
              deliverState = "Relay 1 On";
+        }
+       else if (cmd == 2)      //relay 1 off
+        {
+          Serial.write (re1OFF, sizeof(re1OFF));
+          Serial.println("Relay 1 Off ");
+             deliverState = "Relay 1 Off";
+        }
+       else if (cmd == 5)      //relay 3 on
+        {
+          Serial.write (re3ON, sizeof(re3ON));
+          Serial.println("Relay 3 On ");
+             deliverState = "Relay 3 On";
+        }
+        else if (cmd == 6)      //relay 3 on
+        {
+          Serial.write (re3OFF, sizeof(re3OFF));
+          Serial.println("Relay 3 Off ");
+             deliverState = "Relay 3 Off";
         }
 }
 

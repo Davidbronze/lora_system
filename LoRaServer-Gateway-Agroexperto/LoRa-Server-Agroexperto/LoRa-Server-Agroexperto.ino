@@ -20,7 +20,7 @@
 #define PL 37     //37  RST Pluviometro
 //observar que os pinos 2, 4, 5, 14, 15, 16, 19, 18, 21, 26, 27 não podem ser usados
 #define CHANNEL 3
-#define PRINTSCANRESULTS 0
+#define PRINTSCANRESULTS 1
 #define DELETEBEFOREPAIR 0
 
 //SSID e senha do endpoint
@@ -103,6 +103,7 @@ void setup() {
         LoRa.receive();
 
         WiFi.mode(WIFI_AP);
+        WiFi.softAP("teste2", NULL, CHANNEL, 1, 4);
 
         Serial.println("macaddress do remote: " + WiFi.macAddress()); //macaddress deste esp: 7C:9E:BD:FC:19:04
       
@@ -203,11 +204,14 @@ void ScanForSlave() {
                   Serial.println("");
                 }
               delay(10);
-              // Check if the current device starts with `Slave`
+              // Check if the current device starts with the ssid of the peer
               if (SSID.indexOf("teste1") == 0) {
                 // SSID of interest
                 Serial.println("Found a Slave.");
-                Serial.print(i + 1); Serial.print(": "); Serial.print(SSID); Serial.print(" ["); Serial.print(BSSIDstr); Serial.print("]"); Serial.print(" ("); Serial.print(RSSI); Serial.print(")"); Serial.println("");
+                Serial.print(i + 1); Serial.print(": "); Serial.print(SSID);
+                Serial.print(" ["); Serial.print(BSSIDstr); Serial.print("]");
+                Serial.print(" ("); Serial.print(RSSI); Serial.print(")");
+                Serial.println("");
                 // Get BSSID => Mac Address of the Slave
                 int mac[6];
                 if ( 6 == sscanf(BSSIDstr.c_str(), "%x:%x:%x:%x:%x:%x",  &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5] ) ) {
@@ -228,6 +232,7 @@ void ScanForSlave() {
         
           if (slaveFound) {
             Serial.println("Slave Found, processing..");
+            Serial.println(slave.channel);
           } else {
             Serial.println("Slave Not Found, trying again.");
           }        

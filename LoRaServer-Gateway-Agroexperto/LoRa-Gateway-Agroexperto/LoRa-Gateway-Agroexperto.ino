@@ -57,8 +57,8 @@ Task t1(100, TASK_FOREVER, &taskGetCommand, &scheduler, true);
 String ID = "GATEWAY1";
 String ID_ON = ID + " ON";
 String ID_OFF = ID + " OFF";
-
-
+String appCmd = "";
+bool ledState = false;
 //Variável para guardar o valor do estado atual do relê 
 String currentState = ID_OFF;
 
@@ -166,6 +166,7 @@ void loop() {
        //Executa as tarefas que foram adicionadas ao scheduler
        Serial.println("início do loop");
        Serial.println();
+       
       scheduler.execute();      
            
       //Faz a leitura do pacote Lora
@@ -230,8 +231,8 @@ void sendWiFiPacket(String str){
 // Função que verifica se o app enviou um comando
 void taskGetCommand(){
       // String que receberá o comando vindo do aplicativo
-      String appCmd = "REMOTE1relay1On";
-      String appCmdOff = "REMOTE1relay1Off";
+      
+      ledState = true ? appCmd = "REMOTE1relay1On" : appCmd = "REMOTE1relay1Off";
       //Instancia cliente wifi
         WiFiClient client = server.available();
                 
@@ -240,12 +241,12 @@ void taskGetCommand(){
         //  appCmd = client.readStringUntil('\n');
           // Verificamos o comando, enviando por parâmetro a String appCmd
           handleCommand(appCmd);
-          digitalWrite(25, HIGH);
-          delay(10000);
+          
+          ledState = true ? ledState = false : ledState = true;
 //          handleCommand(appCmdOff);
 //          digitalWrite(25, LOW);
 //          delay(10000);        
-        //}          
+//        }          
       }
 //
 // Função que verifica o comando vindo do app
@@ -260,7 +261,10 @@ void handleCommand(String cmd){
         Serial.println();
         refreshDisplay(cmd);
           //Envia o comando para os REMOTES através de um pacote LoRa
+          digitalWrite(25, HIGH);
           sendLoRaPacket(cmd);
+          delay(10000);          
+          digitalWrite(25, LOW);
         }
 
         //Envia um pacote LoRa
