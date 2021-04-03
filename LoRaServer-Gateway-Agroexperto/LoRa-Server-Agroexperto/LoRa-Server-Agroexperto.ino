@@ -53,25 +53,8 @@ const long debounceDelay = 100;
 bool lastState = 0;
 int reedCounter = 0;
 float precipitacao = 0.0;
-
-//Instancia o sensor
-DHT dht(DHTPIN, DHTTYPE);
-
-//Objeto que vamos utilizar para guardar o ip recebido
-IPAddress myIP;
-
 // Porta do server que vc vai utilizar para conectar no endpoint
-const int port = 80; 
-
-//Tarefas para verificar novos clientes e mensagens enviadas por estes
-//Scheduler scheduler;
-//void handleWeather();
-//void taskHandleClient();
-////Tarefa para verificar se uma nova conexão feita por aplicativo está sendo feita
-//Task t1(100, TASK_FOREVER, &handleWeather, &scheduler, true);
-////Tarefa para verificar se há novas mensagens vindas de aplicativo
-//Task t2(100, TASK_FOREVER, &taskHandleClient, &scheduler, true);
-
+const int port = 80;
 //Id e estados deste esp (altere para cada esp)
 String ID = "REMOTE1"; // ID desta unidade
 String ID_ON = ID + " ON";
@@ -85,8 +68,25 @@ String currentState = ID_OFF;
 String success;
 String incomingReadings;
 
+//Instancia o sensor
+DHT dht(DHTPIN, DHTTYPE);
+
+//Objeto que vamos utilizar para guardar o ip recebido
+IPAddress myIP;
+ 
+
+//Tarefas para verificar novos clientes e mensagens enviadas por estes
+//Scheduler scheduler;
+//void handleWeather();
+//void taskHandleClient();
+////Tarefa para verificar se uma nova conexão feita por aplicativo está sendo feita
+//Task t1(100, TASK_FOREVER, &handleWeather, &scheduler, true);
+////Tarefa para verificar se há novas mensagens vindas de aplicativo
+//Task t2(100, TASK_FOREVER, &taskHandleClient, &scheduler, true);
+
+
 void setup() {
-  Serial.println("=================");
+  Serial.println();
         //Coloca tudo em maiúsculo
         ID_ON.toUpperCase();
         ID_OFF.toUpperCase();
@@ -133,7 +133,6 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     }
 
 
-
 void setupESPNOW(){
         // Init ESP-NOW
         WiFi.disconnect();
@@ -146,13 +145,7 @@ void setupESPNOW(){
         else if (esp_now_init() == ESP_OK) {
           Serial.println("initialized ESP-NOW");
         } 
-       
-                    
-        // Register peer
-//        esp_now_peer_info_t peerInfo;
-//        memcpy(peerInfo.peer_addr, slave, sizeof(slave));
-//        peerInfo.channel = 1;  
-//        peerInfo.encrypt = 0;
+ 
         Serial.println(sizeof(slave.peer_addr));
         char macStr[18];
         snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
