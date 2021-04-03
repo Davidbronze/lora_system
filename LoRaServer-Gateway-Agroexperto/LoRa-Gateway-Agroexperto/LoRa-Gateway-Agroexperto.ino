@@ -58,7 +58,7 @@ String ID = "GATEWAY1";
 String ID_ON = ID + " ON";
 String ID_OFF = ID + " OFF";
 String appCmd = "";
-bool ledState = false;
+bool ledStatus = false;
 //Variável para guardar o valor do estado atual do relê 
 String currentState = ID_OFF;
 
@@ -232,7 +232,7 @@ void sendWiFiPacket(String str){
 void taskGetCommand(){
       // String que receberá o comando vindo do aplicativo
       
-      ledState = true ? appCmd = "REMOTE1relay1On" : appCmd = "REMOTE1relay1Off";
+      ledStatus == true ? appCmd = "REMOTE1relay1On" : appCmd = "REMOTE1relay1Off";
       //Instancia cliente wifi
         WiFiClient client = server.available();
                 
@@ -241,8 +241,6 @@ void taskGetCommand(){
         //  appCmd = client.readStringUntil('\n');
           // Verificamos o comando, enviando por parâmetro a String appCmd
           handleCommand(appCmd);
-          
-          ledState = true ? ledState = false : ledState = true;
 //          handleCommand(appCmdOff);
 //          digitalWrite(25, LOW);
 //          delay(10000);        
@@ -263,8 +261,6 @@ void handleCommand(String cmd){
           //Envia o comando para os REMOTES através de um pacote LoRa
           digitalWrite(25, HIGH);
           sendLoRaPacket(cmd);
-          delay(10000);          
-          digitalWrite(25, LOW);
         }
 
         //Envia um pacote LoRa
@@ -276,4 +272,7 @@ void sendLoRaPacket(String str) {
         //Finaliza e envia o pacote
         LoRa.endPacket();
         refreshDisplay(str);
+        ledStatus == true ? ledStatus = false : ledStatus = true;
+        digitalWrite(25, LOW);
+        delay(11000);
       }

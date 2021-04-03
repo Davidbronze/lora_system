@@ -310,7 +310,7 @@ void loop() {
       
       //Executa as tarefas que foram adicionadas ao scheduler
       //scheduler.execute();
-
+    delay(2000);
       
   }
 
@@ -332,7 +332,6 @@ void handleCommand(String cmd){
       if (cmd.equals(""))
         return;         
       // Exibimos o comando recebido no monitor serial
-      delay(5000);
       Serial.println("1 Received from Gateway: " + cmd);    
       //Verifica se a mensagem é para este esp
       bool forMe = verifyDestiny(cmd);    
@@ -351,7 +350,6 @@ void handleCommand(String cmd){
           //Envia o comando para o endpoint
           digitalWrite(25, HIGH);
           Serial.println("3 comando deve ser enviado para o endpoint");
-          delay(5000);
          sendToEnd(cmd);
         }
       }
@@ -363,7 +361,6 @@ bool verifyDestiny(String state) {
       //Se a mudança de estado pertence ao id vinculado a este esp
       if (state.indexOf("REMOTE1") != -1) {          
               refreshDisplay("recebido");
-              delay(5000);
               Serial.println("2 o comando é para este esp"); 
               return true;                       
                }
@@ -374,24 +371,53 @@ bool verifyDestiny(String state) {
 
 
 //Função que envia mensagem para o endpoint - module relay
-void sendToEnd(String msg) {
-  uint8_t x;
-  const uint8_t *peer_addr = slave.peer_addr;
-  if (msg.indexOf ("relay1On") != -1)      //relay 1 on
-        {
-         x = 1;
-         Serial.println("5 comando com o valor 1 = ligar relay 1");
+void sendToEnd(String msg) {        
+      uint8_t x;
+      const uint8_t *peer_addr = slave.peer_addr;
+      if (msg.indexOf ("relay1Off") != -1)      //relay 1 off
+            {
+             x = 10;
+            }
+      else if (msg.indexOf ("relay1On") != -1)      //relay 1 on
+            {
+             x = 11;
+            }
+      else if (msg.indexOf ("relay2Off") != -1)      //relay 2 off
+            {
+             x = 20;
+            }
+      else if (msg.indexOf ("relay2On") != -1)      //relay 2 on
+            {
+             x = 21;
+            }
+      else if (msg.indexOf ("relay3Off") != -1)      //relay 3 off
+            {
+             x = 30;
+            } 
+      else if (msg.indexOf ("relay3On") != -1)      //relay 3 on
+            {
+             x = 31;
+            }
+      else if (msg.indexOf ("relay4Off") != -1)      //relay 4 off
+            {
+             x = 40;
+            }
+      else if (msg.indexOf ("relay4On") != -1)      //relay 4 on
+            {
+             x = 41;
+            }
+         
+         Serial.println("5 tentando enviar comando...");
       esp_err_t result = esp_now_send(peer_addr, (uint8_t *) &x, sizeof(x));
         if (result == ESP_OK) {
-          Serial.println("6 success sending the data");
+          Serial.println("6 success sending the data" + x);
         }
         else {
           Serial.print("6 error sending:  ");
           Serial.println(result);
         }
-    }
+    
         refreshDisplay(msg);
-        delay(5000);
       }
      
 
@@ -404,7 +430,6 @@ void sendLoRaPacket(String str) {
         LoRa.print(str);
         //Finaliza e envia o pacote
         LoRa.endPacket();
-        delay(5000);
         Serial.println("7  " + str);
       }
 

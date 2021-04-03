@@ -43,12 +43,12 @@ const char* password = "12345678";
 String deliverState;
 
 // Define variable to store incoming comand
-int incomingCmd;
-
+String incomingCmd;
 
 // Variable to store if sending data was successful
 String succesfully;
 
+uint8_t x;
 
 // Callback when data is sent
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
@@ -63,39 +63,61 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
 
 // Callback when data is received
 void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
-      memcpy(&incomingCmd, incomingData, sizeof(incomingCmd));
-      Serial.print("Bytes received: ");
-      uint8_t cmd = incomingCmd;
-      Serial.println(incomingCmd);
-      Serial.println(cmd);
-      getRelays(cmd);
+      memcpy(&x, incomingData, sizeof(x));
+      Serial.print("Comando recebido:  ");
+      Serial.println(x);
+      getRelays(x);
     }
 
-void getRelays(uint8_t cmd){
+void getRelays(uint8_t x){
   // change relays status
-      if (cmd == 1)      //relay 1 on
-        {
-          Serial.write (re1ON, sizeof(re1ON));
-          Serial.println("Relay 1 On ");
-             deliverState = "Relay 1 On";
-        }
-       else if (cmd == 2)      //relay 1 off
+      if (x == 10)      //relay 1 off
         {
           Serial.write (re1OFF, sizeof(re1OFF));
           Serial.println("Relay 1 Off ");
              deliverState = "Relay 1 Off";
         }
-       else if (cmd == 5)      //relay 3 on
+       else if (x == 11)      //relay 1 on
         {
+          Serial.write (re1ON, sizeof(re1ON));
+          Serial.println("Relay 1 On ");
+             deliverState = "Relay 1 On";
+        }
+        else if (x == 20)      //relay 2 off
+                {
+          Serial.write (re2OFF, sizeof(re2OFF));
+          Serial.println("Relay 2 Off ");
+             deliverState = "Relay 2 Off";
+        }
+        else if (x == 21)      //relay 2 on
+                {
+          Serial.write (re2ON, sizeof(re2ON));
+          Serial.println("Relay 2 On ");
+             deliverState = "Relay 2 On";
+        }
+        else if (x == 30)      //relay 3 off
+                {
+          Serial.write (re3OFF, sizeof(re3OFF));
+          Serial.println("Relay 3 Off ");
+             deliverState = "Relay 3 Off";
+        }
+        else if (x == 31)      //relay 3 On
+                {
           Serial.write (re3ON, sizeof(re3ON));
           Serial.println("Relay 3 On ");
              deliverState = "Relay 3 On";
         }
-        else if (cmd == 6)      //relay 3 on
-        {
-          Serial.write (re3OFF, sizeof(re3OFF));
-          Serial.println("Relay 3 Off ");
-             deliverState = "Relay 3 Off";
+        else if (x == 40)      //relay 4 off
+                {
+          Serial.write (re4OFF, sizeof(re4OFF));
+          Serial.println("Relay 4 Off ");
+             deliverState = "Relay 4 Off";
+        }
+        else if (x == 41)      //relay 4 On
+                {
+          Serial.write (re4ON, sizeof(re4ON));
+          Serial.println("Relay 4 On ");
+             deliverState = "Relay 4 On";
         }
 }
 
