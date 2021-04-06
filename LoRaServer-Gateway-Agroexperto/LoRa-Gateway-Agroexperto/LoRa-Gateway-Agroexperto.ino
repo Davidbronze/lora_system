@@ -18,8 +18,8 @@
 #define  PASSWORD "12345678"
 const char* ssid = SSID;
 const char* password = PASSWORD;
-IPAddress staticIP(192,168,1, 200); //IP do GATEWAY
-IPAddress gateway ( 192, 168, 1, 1);
+IPAddress staticIP(192,168,5, 199); //IP do GATEWAY
+IPAddress gateway ( 192, 168, 5, 1);
 IPAddress subnet ( 255, 255, 255, 0 );
 
 //string que recebe o pacote lora
@@ -171,19 +171,7 @@ void loop() {
            
       //Faz a leitura do pacote Lora
         int packetSize = LoRa.parsePacket();
-        receiveLora(packetSize);
-                
-      //Se uma mensagem lora chegou
-      if(!loraPacket.equals("")) {
-          //digitalWrite(25, HIGH);
-         //enviamos a mensagem por wifi para a rede        
-          sendWiFiPacket(loraPacket);
-          gatewayDisplay(loraPacket);
-          Serial.println("pacote recebido da estação e enviado para o BD");
-          delay(5000);
-          //digitalWrite(25,LOW);
-          }
-          else {Serial.println("nenhum pacote lora");}  
+        receiveLora(packetSize);                       
            
        }
 
@@ -191,14 +179,26 @@ void receiveLora(int packetSize){
           //if (packetSize == 0) return;
           loraPacket = "";
             String packSize = String(packetSize,DEC);
-            Serial.print(packSize);       
+            Serial.print(packSize);
+            Serial.print("  bytes recebidos da Station 1 ");       
             for (int i = 0; i < packetSize; i++) {
               loraPacket += (char) LoRa.read();
               }
-            Serial.print("  bytes recebidos da Station 1 ");
             Serial.println(loraPacket);
             String rssi = "RSSI: " + String(LoRa.packetRssi(), DEC); 
-            Serial.println(rssi);                
+            Serial.println(rssi);
+                //Se uma mensagem lora chegou
+            if(!loraPacket.equals("")) {
+                //digitalWrite(25, HIGH);
+               //enviamos a mensagem por wifi para a rede        
+                sendWiFiPacket(loraPacket);
+                gatewayDisplay(loraPacket);
+                Serial.println("pacote recebido da estação e enviado para o BD");
+                delay(5000);
+                //digitalWrite(25,LOW);
+                }
+                else {Serial.println("nenhum pacote lora");}  
+                gatewayDisplay("sem LoRa"); 
         }
 
 
@@ -241,10 +241,6 @@ void taskGetCommand(){
         //  appCmd = client.readStringUntil('\n');
           // Verificamos o comando, enviando por parâmetro a String appCmd
           handleCommand(appCmd);
-//          handleCommand(appCmdOff);
-//          digitalWrite(25, LOW);
-//          delay(10000);        
-//        }          
       }
 //
 // Função que verifica o comando vindo do app
@@ -273,6 +269,7 @@ void sendLoRaPacket(String str) {
         LoRa.endPacket();
         refreshDisplay(str);
         ledStatus == true ? ledStatus = false : ledStatus = true;
+        delay(6000);
         digitalWrite(25, LOW);
-        delay(11000);
+        delay(7000);
       }

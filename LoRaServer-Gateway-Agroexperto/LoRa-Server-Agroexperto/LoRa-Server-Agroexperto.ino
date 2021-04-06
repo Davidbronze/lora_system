@@ -290,6 +290,7 @@ void weatherDisplay(int temperatura, int max_s, int min_s){
 }
 
 void loop() {
+  digitalWrite(25, LOW);
     readPluv();  
      unsigned long currentMillis = millis();       
         if (currentMillis - previousMillis >= intervalo){  //Verifica se o intervalo já foi atingido
@@ -303,6 +304,8 @@ void loop() {
       
       //Executa as tarefas que foram adicionadas ao scheduler
       //scheduler.execute();
+      
+  weatherDisplay(t, maxima, minima);
     delay(2000);
       
   }
@@ -458,13 +461,14 @@ void handleWeather(){
               weatherDisplay(t, maxima, minima);  
           //===============================================================
           
-                    if(counter >= 60){
+                    if(counter >= 2){
                       counter = 0;            
                       
                       //Cria a string com os dados
                       String body = "leit1=" + stationCode + "&leit2=" + t + "&leit3=" + h + "&leit4=" + precipitacao;
                     
-                            sendLoRaPacket(body);                
+                            sendLoRaPacket(body);
+                            Serial.println("lora sended?");                
                           }            
                  t_ant = t;
                  h_ant = h;
