@@ -53,6 +53,7 @@ const long debounceDelay = 100;
 bool lastState = 0;
 int reedCounter = 0;
 float precipitacao = 0.0;
+int precip = 0;
 // Porta do server que vc vai utilizar para conectar no endpoint
 const int port = 80;
 //Id e estados deste esp (altere para cada esp)
@@ -465,8 +466,8 @@ void handleWeather(){
                       counter = 0;            
                       
                       //Cria a string com os dados
-                      String body = "leit1=" + stationCode + "&leit2=" + t + "&leit3=" + h + "&leit4=" + precipitacao;
-                    
+                      //String body = "leit1"=" + stationCode + "&leit2=" + t + "&leit3=" + h + "&leit4=" + precip;
+                      String body = "LoRa...";
                             sendLoRaPacket(body);
                             Serial.println("lora sended?");                
                           }            
@@ -489,10 +490,12 @@ void readPluv(){
             reedCounter +=1;
             lastState = 0;
             lastDebounceTime = 0;
-            precipitacao = float(reedCounter)*0.27;        
+            precipitacao = float(reedCounter)*0.27;
+            precip = round(precipitacao);       
             Serial.print("Precipitação (mm)= ");
             Serial.print(precipitacao);
-            Serial.println(" mm");
+            Serial.println(" mm");            
+            Serial.println(precip);
           }
         }  
   }

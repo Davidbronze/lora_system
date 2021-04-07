@@ -61,6 +61,8 @@ String appCmd = "";
 bool ledStatus = false;
 //Variável para guardar o valor do estado atual do relê 
 String currentState = ID_OFF;
+String packSize = "--";
+String rssi = "RSSI --";
 
 void setup() {
       //Coloca tudo em maiúsculo
@@ -84,6 +86,8 @@ void setup() {
       scheduler.startNow();
 
       sendLoRaPacket("Pacote de teste");
+
+      LoRa.onReceive(onReceive);
 
       Serial.println("Setup finalizado");
       delay(5000);
@@ -170,24 +174,8 @@ void loop() {
       scheduler.execute();      
            
       //Faz a leitura do pacote Lora
-        int packetSize = LoRa.parsePacket();
-        receiveLora(packetSize);                       
-           
-       }
-
-void receiveLora(int packetSize){
-          //if (packetSize == 0) return;
-          loraPacket = "";
-            String packSize = String(packetSize,DEC);
-            Serial.print(packSize);
-            Serial.print("  bytes recebidos da Station 1 ");       
-            for (int i = 0; i < packetSize; i++) {
-              loraPacket += (char) LoRa.read();
-              }
-            Serial.println(loraPacket);
-            String rssi = "RSSI: " + String(LoRa.packetRssi(), DEC); 
-            Serial.println(rssi);
-                //Se uma mensagem lora chegou
+        LoRa.receive();
+         //Se uma mensagem lora chegou
             if(!loraPacket.equals("")) {
                 //digitalWrite(25, HIGH);
                //enviamos a mensagem por wifi para a rede        
@@ -195,11 +183,44 @@ void receiveLora(int packetSize){
                 gatewayDisplay(loraPacket);
                 Serial.println("pacote recebido da estação e enviado para o BD");
                 delay(5000);
-                //digitalWrite(25,LOW);
+                //digitalWrite(25,LOW);                
                 }
                 else {Serial.println("nenhum pacote lora");}  
-                gatewayDisplay("sem LoRa"); 
-        }
+                gatewayDisplay("sem LoRa");                       
+           
+       }
+
+void onReceive(int packetSize)//LoRa receiver interrupt service
+{
+  //if (packetSize == 0) return;
+
+  loraPacket = "";
+    packSize = String(packetSize,DEC);
+
+    while (LoRa.available())
+    {
+    loraPacket += (char) LoRa.read();
+    }
+
+    Serial.println(loraPacket);
+    rssi = "RSSI: " + String(LoRa.packetRssi(), DEC);
+}
+
+//String receiveLora(){
+//          //if (packetSize == 0) return;
+//          int packetSize = LoRa.parsePacket();
+//            String packSize = String(packetSize,DEC);
+//            Serial.print(packSize);
+//            Serial.print("  bytes recebidos da Station 1 ");       
+//            for (int i = 0; i < packetSize; i++) {
+//              loraPacket += (char) LoRa.read();
+//              }
+//            Serial.println(loraPacket);
+//            String rssi = "RSSI: " + String(LoRa.packetRssi(), DEC); 
+//            Serial.println(rssi);            
+//            return loraPacket;
+//                
+//        }
 
 
 void sendWiFiPacket(String str){
