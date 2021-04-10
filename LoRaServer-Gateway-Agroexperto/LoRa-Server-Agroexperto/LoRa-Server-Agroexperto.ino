@@ -46,7 +46,7 @@ int h_ant = 0;
 int t_ant = 0;
 int counter = 0;
 bool vl;
-const long intervalo = 60000; //Intervalo de tempo entre leituras
+const long intervDHT = 60000; //Intervalo de tempo entre leituras do DHT
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
 unsigned long lastDebounceTime = 0;
 const long debounceDelay = 100;
@@ -62,7 +62,7 @@ String ID_ON = ID + " ON";
 String ID_OFF = ID + " OFF";
 //identificação da estação (código AgroexPerto)
 String stationCode = "SP200"; //id da estação - alterar e conferir depois de depurar o programa
-
+String loraPacket = "";
 
 //Variável para guardar o valor do estado atual do relê 
 String currentState = ID_OFF;
@@ -100,18 +100,21 @@ void setup() {
         //Inicializa o display
         setupDisplay();
       
-        //Ativa o recebimento e envio de pacotes lora
-        LoRa.receive();
-
         WiFi.mode(WIFI_AP);
         WiFi.softAP("teste2", NULL, CHANNEL, 1, 4);
 
         Serial.println("macaddress do remote: " + WiFi.macAddress()); //macaddress deste esp: 7C:9E:BD:FC:19:04
-      
-        
+              
         ScanForSlave();
 
         setupESPNOW();
+        
+        //Ativa o recebimento e envio de pacotes lora
+        LoRa.onReceive(onReceive);
+        LoRa.receive();
+
+        refreshDisplay("Setup Ok");
+        
         delay(5000);
       
         //Inicializa o agendador de tarefas
@@ -294,40 +297,40 @@ void loop() {
   digitalWrite(25, LOW);
     readPluv();  
      unsigned long currentMillis = millis();       
-        if (currentMillis - previousMillis >= intervalo){  //Verifica se o intervalo já foi atingido
+        if (currentMillis - previousMillis >= intervDHT){  //Verifica se o intervalo já foi atingido
            previousMillis = currentMillis; //Armazena o valor da ultima leitura
           handleWeather();
         }        
      //Faz a leitura do pacote
-      String packet = readLoRaPacket();
-      //Se uma mensagem chegou      
-      handleCommand(packet);
+      //LoRa.receive();
       
       //Executa as tarefas que foram adicionadas ao scheduler
       //scheduler.execute();
       
   weatherDisplay(t, maxima, minima);
-    delay(2000);
       
   }
 
 //Faz a leitura de um pacote (se chegou algum)
-String readLoRaPacket() {
-      String packet = "";
+void onReceive(int packetSize) {
+      loraPacket = "";
+      Serial.println("inicio on Receive");      
       //Verifica o tamanho do pacote
-      int packetSize = LoRa.parsePacket();
+      packetSize = LoRa.parsePacket();
+      if (packetSize == 0) return;
       //Lê cada caractere e concatena na string 
       for (int i = 0; i < packetSize; i++) { 
-        packet += (char) LoRa.read(); 
+        loraPacket += (char) LoRa.read(); 
       }
-      return packet;
+      Serial.println("lora packet =  " + loraPacket);
+      Serial.println(packetSize);
+      //Se uma mensagem chegou      
+      handleCommand(loraPacket);
+      
     }
 
 // Função que verifica o comando vindo do gateway
 void handleCommand(String cmd){
-      // Se a String estiver vazia não precisamos fazer nada
-      if (cmd.equals(""))
-        return;         
       // Exibimos o comando recebido no monitor serial
       Serial.println("1 Received from Gateway: " + cmd);    
       //Verifica se a mensagem é para este esp
@@ -348,6 +351,7 @@ void handleCommand(String cmd){
           digitalWrite(25, HIGH);
           Serial.println("3 comando deve ser enviado para o endpoint");
          sendToEnd(cmd);
+         cmd = "";
         }
       }
     }
@@ -466,10 +470,11 @@ void handleWeather(){
                       counter = 0;            
                       
                       //Cria a string com os dados
-                      //String body = "leit1"=" + stationCode + "&leit2=" + t + "&leit3=" + h + "&leit4=" + precip;
-                      String body = "LoRa...";
+                      String body = "leit1=" + stationCode + "&leit2=" + t + "&leit3=" + h + "&leit4=" + precip;
+                      //String body = "LoRa...";
                             sendLoRaPacket(body);
-                            Serial.println("lora sended?");                
+                            Serial.println("lora sended?");
+                            LoRa.receive();                
                           }            
                  t_ant = t;
                  h_ant = h;
@@ -491,12 +496,12 @@ void readPluv(){
             lastState = 0;
             lastDebounceTime = 0;
             precipitacao = float(reedCounter)*0.27;
-            precip = round(precipitacao);       
+            precip = round(precipitacao);
             Serial.print("Precipitação (mm)= ");
             Serial.print(precipitacao);
             Serial.println(" mm");            
             Serial.println(precip);
           }
-        }  
+      }  
   }
       

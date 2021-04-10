@@ -32,6 +32,7 @@ const char* serverName = "https://agroexperto.xxxxxxxxxxxxxxxxx";
 String stationCode = "xx-Gate-1";
 
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
+unsigned long lastTimeCmd = 0;
 
 //Objeto que vamos utilizar para guardar o ip recebido
 IPAddress myIP;
@@ -76,7 +77,7 @@ void setup() {
       //Se conecta à rede WiFi
       setupWiFi();
 
-      //LoRa.onReceive(onReceive);
+      LoRa.onReceive(onReceive);
       LoRa.receive();
     
       //Inicializa o server ao qual vc vai se conectar utilizando o ddns
@@ -84,10 +85,6 @@ void setup() {
       
       //Inicializa o agendador de tarefas
       scheduler.startNow();
-
-      sendLoRaPacket("Pacote de teste");
-
-      LoRa.onReceive(onReceive);
 
       Serial.println("Setup finalizado");
       delay(5000);
@@ -168,59 +165,27 @@ void gatewayDisplay(String pct) {
 
 void loop() {
        //Executa as tarefas que foram adicionadas ao scheduler
-       Serial.println("início do loop");
-       Serial.println();
-       
-      scheduler.execute();      
-           
-      //Faz a leitura do pacote Lora
-        LoRa.receive();
-         //Se uma mensagem lora chegou
-            if(!loraPacket.equals("")) {
-                //digitalWrite(25, HIGH);
-               //enviamos a mensagem por wifi para a rede        
-                sendWiFiPacket(loraPacket);
-                gatewayDisplay(loraPacket);
-                Serial.println("pacote recebido da estação e enviado para o BD");
-                delay(5000);
-                //digitalWrite(25,LOW);                
-                }
-                else {Serial.println("nenhum pacote lora");}  
-                gatewayDisplay("sem LoRa");                       
+              
+      scheduler.execute();
+      
+     //LoRa.receive(); 
            
        }
 
 void onReceive(int packetSize)//LoRa receiver interrupt service
 {
-  //if (packetSize == 0) return;
-
-  loraPacket = "";
-    packSize = String(packetSize,DEC);
-
-    while (LoRa.available())
-    {
-    loraPacket += (char) LoRa.read();
+      //if (packetSize == 0) return;
+      loraPacket = "";
+        packSize = String(packetSize,DEC);
+        while (LoRa.available()) {
+        loraPacket += (char) LoRa.read();
+        }
+        rssi = "RSSI: " + String(LoRa.packetRssi(), DEC);
+        Serial.println("pacote lora recebido, nivel " + rssi);
+        Serial.println(loraPacket);
+         //enviamos a mensagem por wifi para a rede
+          sendWiFiPacket(loraPacket); 
     }
-
-    Serial.println(loraPacket);
-    rssi = "RSSI: " + String(LoRa.packetRssi(), DEC);
-}
-
-//String receiveLora(){
-//          //if (packetSize == 0) return;
-//          int packetSize = LoRa.parsePacket();
-//            String packSize = String(packetSize,DEC);
-//            Serial.print(packSize);
-//            Serial.print("  bytes recebidos da Station 1 ");       
-//            for (int i = 0; i < packetSize; i++) {
-//              loraPacket += (char) LoRa.read();
-//              }
-//            Serial.println(loraPacket);
-//            String rssi = "RSSI: " + String(LoRa.packetRssi(), DEC); 
-//            Serial.println(rssi);            
-//            return loraPacket;
-//                
-//        }
 
 
 void sendWiFiPacket(String str){
@@ -246,22 +211,27 @@ void sendWiFiPacket(String str){
         else {
           Serial.println("WiFi Disconnected");
           }
+          
         }
 
 
 // Função que verifica se o app enviou um comando
 void taskGetCommand(){
-      // String que receberá o comando vindo do aplicativo
-      
+        if(millis()-lastTimeCmd >=7000){
+          ledStatus == true ? ledStatus = false : ledStatus = true;
+          digitalWrite(25, LOW);
+          lastTimeCmd = millis();   
+          
+  
       ledStatus == true ? appCmd = "REMOTE1relay1On" : appCmd = "REMOTE1relay1Off";
       //Instancia cliente wifi
-        WiFiClient client = server.available();
+        //WiFiClient client = server.available();
                 
        // if(client.available()){
           // Recebemos a String até o '\n'
         //  appCmd = client.readStringUntil('\n');
           // Verificamos o comando, enviando por parâmetro a String appCmd
-          handleCommand(appCmd);
+          handleCommand(appCmd);}
       }
 //
 // Função que verifica o comando vindo do app
@@ -273,11 +243,12 @@ void handleCommand(String cmd){
        // cmd.toUpperCase();      
         // Exibimos o comando recebido no monitor serial
         Serial.println("Received from app: " + cmd);
-        Serial.println();
         refreshDisplay(cmd);
           //Envia o comando para os REMOTES através de um pacote LoRa
           digitalWrite(25, HIGH);
           sendLoRaPacket(cmd);
+          LoRa.receive();
+                          
         }
 
         //Envia um pacote LoRa
@@ -289,8 +260,5 @@ void sendLoRaPacket(String str) {
         //Finaliza e envia o pacote
         LoRa.endPacket();
         refreshDisplay(str);
-        ledStatus == true ? ledStatus = false : ledStatus = true;
-        delay(6000);
         digitalWrite(25, LOW);
-        delay(7000);
       }
