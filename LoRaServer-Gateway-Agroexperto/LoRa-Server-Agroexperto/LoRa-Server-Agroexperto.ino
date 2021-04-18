@@ -301,8 +301,9 @@ void loop() {
            previousMillis = currentMillis; //Armazena o valor da ultima leitura
           handleWeather();
         }        
-     //Faz a leitura do pacote
-      //LoRa.receive();
+     if (!loraPacket.equals("")){
+          handleCommand(loraPacket);
+         }
       
       //Executa as tarefas que foram adicionadas ao scheduler
       //scheduler.execute();
@@ -313,26 +314,16 @@ void loop() {
 
 //Faz a leitura de um pacote (se chegou algum)
 void onReceive(int packetSize) {
-      loraPacket = "";
-      Serial.println("inicio on Receive");      
-      //Verifica o tamanho do pacote
-      packetSize = LoRa.parsePacket();
-      if (packetSize == 0) return;
-      //Lê cada caractere e concatena na string 
-      for (int i = 0; i < packetSize; i++) { 
-        loraPacket += (char) LoRa.read(); 
-      }
+      loraPacket = ""; 
+        while (LoRa.available()){
+        loraPacket += (char)LoRa.read(); 
+        }
       Serial.println("lora packet =  " + loraPacket);
-      Serial.println(packetSize);
-      //Se uma mensagem chegou      
-      handleCommand(loraPacket);
-      
+      Serial.println(packetSize);      
     }
 
 // Função que verifica o comando vindo do gateway
-void handleCommand(String cmd){
-      // Exibimos o comando recebido no monitor serial
-      Serial.println("1 Received from Gateway: " + cmd);    
+void handleCommand(String cmd){ 
       //Verifica se a mensagem é para este esp
       bool forMe = verifyDestiny(cmd);    
       //Se a mensagem é para este esp
@@ -349,11 +340,12 @@ void handleCommand(String cmd){
         else {
           //Envia o comando para o endpoint
           digitalWrite(25, HIGH);
-          Serial.println("3 comando deve ser enviado para o endpoint");
+          Serial.println("3 comando vai para o endpoint");
          sendToEnd(cmd);
          cmd = "";
         }
       }
+      loraPacket = "";
     }
 
   //Verifica se estado é valido para este esp e modifica o estado do relê de acordo
@@ -411,7 +403,7 @@ void sendToEnd(String msg) {
          Serial.println("5 tentando enviar comando...");
       esp_err_t result = esp_now_send(peer_addr, (uint8_t *) &x, sizeof(x));
         if (result == ESP_OK) {
-          Serial.println("6 success sending the data" + x);
+          Serial.println("6 success sending data" + x);
         }
         else {
           Serial.print("6 error sending:  ");
@@ -419,6 +411,7 @@ void sendToEnd(String msg) {
         }
     
         refreshDisplay(msg);
+        loraPacket = "";
       }
      
 

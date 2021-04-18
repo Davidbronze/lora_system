@@ -14,8 +14,8 @@
 //#define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "teste1-subst"
-#define  PASSWORD "12345678"
+#define  SSID     "VIVOFIBRA-5F56"
+#define  PASSWORD "33d7405f56"
 const char* ssid = SSID;
 const char* password = PASSWORD;
 IPAddress staticIP(192,168,5, 199); //IP do GATEWAY
@@ -26,7 +26,7 @@ IPAddress subnet ( 255, 255, 255, 0 );
 String loraPacket = "";
 
 //url do servidor para enviar dados
-const char* serverName = "https://agroexperto.xxxxxxxxxxxxxxxxx";
+const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
 
 //identificação da estação (código AgroexPerto)
 String stationCode = "xx-Gate-1";
@@ -167,13 +167,15 @@ void loop() {
        //Executa as tarefas que foram adicionadas ao scheduler
               
       scheduler.execute();
-      
-     //LoRa.receive(); 
-           
-       }
+
+      //enviamos a mensagem por wifi para a rede
+      if (!loraPacket.equals("")){
+      sendWiFiPacket(loraPacket);
+      } 
+     }
 
 void onReceive(int packetSize)//LoRa receiver interrupt service
-{
+    {
       //if (packetSize == 0) return;
       loraPacket = "";
         packSize = String(packetSize,DEC);
@@ -181,10 +183,7 @@ void onReceive(int packetSize)//LoRa receiver interrupt service
         loraPacket += (char) LoRa.read();
         }
         rssi = "RSSI: " + String(LoRa.packetRssi(), DEC);
-        Serial.println("pacote lora recebido, nivel " + rssi);
-        Serial.println(loraPacket);
-         //enviamos a mensagem por wifi para a rede
-          sendWiFiPacket(loraPacket); 
+        Serial.println("pacote lora recebido, nivel " + rssi);         
     }
 
 
@@ -211,25 +210,22 @@ void sendWiFiPacket(String str){
         else {
           Serial.println("WiFi Disconnected");
           }
-          
+          loraPacket = "";
         }
 
 
 // Função que verifica se o app enviou um comando
 void taskGetCommand(){
-        if(millis()-lastTimeCmd >=7000){
+        if(millis()-lastTimeCmd >=13000){
           ledStatus == true ? ledStatus = false : ledStatus = true;
           digitalWrite(25, LOW);
-          lastTimeCmd = millis();   
-          
-  
-      ledStatus == true ? appCmd = "REMOTE1relay1On" : appCmd = "REMOTE1relay1Off";
-      //Instancia cliente wifi
-        //WiFiClient client = server.available();
-                
-       // if(client.available()){
-          // Recebemos a String até o '\n'
-        //  appCmd = client.readStringUntil('\n');
+          lastTimeCmd = millis(); 
+          ledStatus == true ? appCmd = "REMOTE1relay1On" : appCmd = "REMOTE1relay1Off";
+              //Instancia cliente wifi
+              //WiFiClient client = server.available();                
+              // if(client.available()){
+                // Recebemos a String até o '\n'
+              //  appCmd = client.readStringUntil('\n');
           // Verificamos o comando, enviando por parâmetro a String appCmd
           handleCommand(appCmd);}
       }
@@ -243,7 +239,7 @@ void handleCommand(String cmd){
        // cmd.toUpperCase();      
         // Exibimos o comando recebido no monitor serial
         Serial.println("Received from app: " + cmd);
-        refreshDisplay(cmd);
+        //refreshDisplay(cmd);
           //Envia o comando para os REMOTES através de um pacote LoRa
           digitalWrite(25, HIGH);
           sendLoRaPacket(cmd);
