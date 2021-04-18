@@ -1,6 +1,10 @@
 
+
 //GATEWAY com DDNS - Gateway central
 
+
+#include <ssl_client.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <heltec.h>
 #include <TaskScheduler.h>
@@ -189,9 +193,12 @@ void onReceive(int packetSize)//LoRa receiver interrupt service
 
 void sendWiFiPacket(String str){
       if(WiFi.status()== WL_CONNECTED){
+        WiFiClientSecure *client = new WiFiClientSecure;
+          if(client) {
+            client -> setCACert(rootCACertificate);
             HTTPClient https; //cria instância do cliente http
             // Inicia o protocolo http com o cliente wifi e a url ou IP do servidor
-            https.begin(serverName);
+            https.begin(*client, serverName);
             // Specify content-type header
             https.addHeader("Content-Type", "application/x-www-form-urlencoded");      
             // Send HTTP POST request
@@ -222,10 +229,10 @@ void taskGetCommand(){
           lastTimeCmd = millis(); 
           ledStatus == true ? appCmd = "REMOTE1relay1On" : appCmd = "REMOTE1relay1Off";
               //Instancia cliente wifi
-              //WiFiClient client = server.available();                
-              // if(client.available()){
+              //WiFiClient wifiClient = server.available();                
+              // if(wifiClient.available()){
                 // Recebemos a String até o '\n'
-              //  appCmd = client.readStringUntil('\n');
+              //  appCmd = wifiClient.readStringUntil('\n');
           // Verificamos o comando, enviando por parâmetro a String appCmd
           handleCommand(appCmd);}
       }
