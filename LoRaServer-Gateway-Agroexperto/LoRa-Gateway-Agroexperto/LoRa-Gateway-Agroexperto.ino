@@ -14,8 +14,8 @@
 //#define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "VIVOFIBRA-5F56"
-#define  PASSWORD "33d7405f56"
+#define  SSID     "xxxxxxxxxxx"
+#define  PASSWORD "xxxxxxxxxxx"
 const char* ssid = SSID;
 const char* password = PASSWORD;
 IPAddress staticIP(192,168,5, 199); //IP do GATEWAY
@@ -26,7 +26,7 @@ IPAddress subnet ( 255, 255, 255, 0 );
 String loraPacket = "";
 
 //url do servidor para enviar dados
-const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
+const char* serverName = "https://xxxxxxxxxxxxxxxxxxxxxx.php";
 
 //identificação da estação (código AgroexPerto)
 String stationCode = "xx-Gate-1";
