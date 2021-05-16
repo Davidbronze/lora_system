@@ -19,12 +19,21 @@
 //#define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID    
+#define  SSID     "VIVOFIBRA-5F56"
+#define  PASSWORD "33d7405f56"
 const char* ssid = SSID;
 const char* password = PASSWORD;
 IPAddress staticIP(192,168,5, 199); //IP do GATEWAY
 IPAddress gateway ( 192, 168, 5, 1);
 IPAddress subnet ( 255, 255, 255, 0 );
+
+//url do servidor para enviar dados
+const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
+
+//identificação da estação (código AgroexPerto)
+String stationCode = "xx-Gate-1";
+
+const char* hostAgro = "agroexperto.com.br";
 
 const char* rootCACertificate = \
 "-----BEGIN CERTIFICATE-----\n" \
@@ -64,16 +73,8 @@ const char* rootCACertificate = \
 "xEQeg3v65yBl98Fvh1wSTmDeXvYt\n" \
 "-----END CERTIFICATE-----\n";
 
-const char* hostAgro = "agroexperto.com.br";
-
 //string que recebe o pacote lora
 String loraPacket = "";
-
-//url do servidor para enviar dados
-const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
-
-//identificação da estação (código AgroexPerto)
-String stationCode = "xx-Gate-1";
 
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
 unsigned long lastTimeCmd = 0;
