@@ -10,6 +10,7 @@
 #include <TaskScheduler.h>
 #include <vector>
 #include <WiFi.h>
+#include <WiFiMulti.h>
 
 //Frequência
 #define BAND 915E6
@@ -18,19 +19,58 @@
 //#define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "xxxxxxxxxxx"
-#define  PASSWORD "xxxxxxxxxxx"
+#define  SSID    
 const char* ssid = SSID;
 const char* password = PASSWORD;
 IPAddress staticIP(192,168,5, 199); //IP do GATEWAY
 IPAddress gateway ( 192, 168, 5, 1);
 IPAddress subnet ( 255, 255, 255, 0 );
 
+const char* rootCACertificate = \
+"-----BEGIN CERTIFICATE-----\n" \
+"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\n" \
+"xEQeg3v65yBl98Fvh1wSTmDeXvYt\n" \
+"-----END CERTIFICATE-----\n";
+
+const char* hostAgro = "agroexperto.com.br";
+
 //string que recebe o pacote lora
 String loraPacket = "";
 
 //url do servidor para enviar dados
-const char* serverName = "https://xxxxxxxxxxxxxxxxxxxxxx.php";
+const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
 
 //identificação da estação (código AgroexPerto)
 String stationCode = "xx-Gate-1";
@@ -45,6 +85,10 @@ IPAddress myIP;
 const int port = 80; 
 // Objeto WiFi Server, o ESP será o servidor
 WiFiServer server(port);
+
+WiFiMulti wiFiMulti;
+
+WiFiClientSecure client;
 
 // Vetor com os clientes que se conectarão no ESP
 //std::vector<WiFiClient> clients;
@@ -89,6 +133,8 @@ void setup() {
       
       //Inicializa o agendador de tarefas
       scheduler.startNow();
+      
+      Serial.println(xPortGetCoreID());
 
       Serial.println("Setup finalizado");
       delay(5000);
@@ -115,16 +161,19 @@ void setupWiFi() {
       //Faz o ESP se conectar à rede WiFi
       WiFi.setAutoConnect(true);
       WiFi.config (staticIP, gateway, subnet);
-      WiFi.begin(ssid, password);    
+      wiFiMulti.addAP(ssid, password);
+      //WiFi.begin(ssid, password);    
         //Enquanto o ESP não se conectar à rede
         byte count = 0;
-        while (WiFi.status() != WL_CONNECTED && count < 50){
+        //while (WiFi.status() != WL_CONNECTED && count < 50){
+        while (wiFiMulti.run() != WL_CONNECTED && count < 50){
           count ++; //fazemos "count" tentativas
               //Esperamos 100 milisegundos
               delay(100);
               Serial.print(".");
             }
-      if (WiFi.status() == WL_CONNECTED){ 
+      if (wiFiMulti.run() == WL_CONNECTED){
+      //if (WiFi.status() == WL_CONNECTED){ 
           //Se chegou aqui é porque conectou à rede, então mostramos no monitor serial para termos um feedback
           Serial.println("");
           Serial.println("Conectou");    
@@ -187,38 +236,50 @@ void onReceive(int packetSize)//LoRa receiver interrupt service
         loraPacket += (char) LoRa.read();
         }
         rssi = "RSSI: " + String(LoRa.packetRssi(), DEC);
-        Serial.println("pacote lora recebido, nivel " + rssi);         
+        Serial.println("pacote lora recebido, nivel " + rssi);
+        Serial.println("pacote: " + loraPacket);         
     }
 
 
 void sendWiFiPacket(String str){
-      if(WiFi.status()== WL_CONNECTED){
-        WiFiClientSecure *client = new WiFiClientSecure;
-          if(client) {
-            client -> setCACert(rootCACertificate);
+      if(wiFiMulti.run() == WL_CONNECTED){
+      //if (WiFi.status() == WL_CONNECTED){
+        client.setCACert(rootCACertificate);
+        client.connect(serverName, 443);       
+        delay(500);
+        if (client.connected() == false){
+            Serial.println("Connection failed!");}
+        else {
             HTTPClient https; //cria instância do cliente http
             // Inicia o protocolo http com o cliente wifi e a url ou IP do servidor
-            https.begin(*client, serverName);
+            https.begin(client, serverName);
+            //https.begin(client, serverName);
             // Specify content-type header
+            https.addHeader("Host", "agroexperto.com.br");
             https.addHeader("Content-Type", "application/x-www-form-urlencoded");      
             // Send HTTP POST request
             int httpCode = https.POST(str);
+            delay(2000);
                 if (httpCode < 0) {
                   Serial.println("erro na requisição");
+                  Serial.println(https.errorToString(httpCode));
                   Serial.println(https.getString());
-                  //delay(60000);
-                  return;    
+                  //delay(60000);                      
                   }
+                  else {
                   Serial.println("Conectado");
-                  Serial.println(https.getString());        
+                  Serial.println(https.getString());
+                  }        
             // Free resources
             https.end();
-          }
-        else {
+            client.stop();            
+            }
+          }              
+         else {
           Serial.println("WiFi Disconnected");
-          }
-          loraPacket = "";
-        }
+       }         
+       loraPacket = "";
+    }
 
 
 // Função que verifica se o app enviou um comando
@@ -227,7 +288,7 @@ void taskGetCommand(){
           ledStatus == true ? ledStatus = false : ledStatus = true;
           digitalWrite(25, LOW);
           lastTimeCmd = millis(); 
-          ledStatus == true ? appCmd = "REMOTE1relay1On" : appCmd = "REMOTE1relay1Off";
+          ledStatus == true ? appCmd = "REMOTE1relay2On" : appCmd = "REMOTE1relay2Off";
               //Instancia cliente wifi
               //WiFiClient wifiClient = server.available();                
               // if(wifiClient.available()){
