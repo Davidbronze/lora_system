@@ -19,8 +19,8 @@
 //#define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "VIVOFIBRA-5F56"
-#define  PASSWORD "33d7405f56"
+#define  SSID     "x"
+#define  PASSWORD "x"
 const char* ssid = SSID;
 const char* password = PASSWORD;
 IPAddress staticIP(192,168,5, 199); //IP do GATEWAY
@@ -28,12 +28,12 @@ IPAddress gateway ( 192, 168, 5, 1);
 IPAddress subnet ( 255, 255, 255, 0 );
 
 //url do servidor para enviar dados
-const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
+const char* serverName = "https://";
 
 //identificação da estação (código AgroexPerto)
 String stationCode = "xx-Gate-1";
 
-const char* hostAgro = "agroexperto.com.br";
+const char* hostAgro = ".br";
 
 const char* rootCACertificate = \
 "-----BEGIN CERTIFICATE-----\n" \
@@ -73,9 +73,6 @@ const char* rootCACertificate = \
 "xEQeg3v65yBl98Fvh1wSTmDeXvYt\n" \
 "-----END CERTIFICATE-----\n";
 
-//string que recebe o pacote lora
-String loraPacket = "";
-
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
 unsigned long lastTimeCmd = 0;
 
@@ -83,7 +80,7 @@ unsigned long lastTimeCmd = 0;
 IPAddress myIP;
 
 // Porta do server que vc vai utilizar para conectar pelo aplicativo
-const int port = 80; 
+const int port = 443; 
 // Objeto WiFi Server, o ESP será o servidor
 WiFiServer server(port);
 
@@ -113,9 +110,14 @@ bool ledStatus = false;
 String currentState = ID_OFF;
 String packSize = "--";
 String rssi = "RSSI --";
+//string que recebe o pacote lora
+String loraPacket;
+bool flag1 = 0;
+
 
 void setup() {
       //Coloca tudo em maiúsculo
+      loraPacket.reserve(50);
       ID_ON.toUpperCase();
       ID_OFF.toUpperCase();    
       Heltec.begin(true /*Ativa o display*/, true /*Ativa lora*/, true /*Ativa informações pela serial*/, true /*Ativa PABOOST*/, BAND /*frequência*/);     
@@ -218,69 +220,80 @@ void gatewayDisplay(String pct) {
     }    
 
 void loop() {
-       //Executa as tarefas que foram adicionadas ao scheduler
-              
+       //Executa as tarefas que foram adicionadas ao scheduler              
       scheduler.execute();
 
       //enviamos a mensagem por wifi para a rede
-      if (!loraPacket.equals("")){
-      sendWiFiPacket(loraPacket);
-      } 
+      if (flag1 == 1){
+        xTaskCreatePinnedToCore(
+                    sendWiFiPacket,            /* função que implementa a tarefa */
+                    "sendWiFiPacket",          /* nome da tarefa */
+                    20000,                     /* número de palavras a serem alocadas para uso com a pilha da tarefa */
+                    (void *) &loraPacket,   /* parâmetro de entrada para a tarefa (pode ser NULL) */
+                    1,                          /* prioridade da tarefa (0 a N) */
+                    NULL,                       /* referência para a tarefa (pode ser NULL) */
+                    0);                         /* Núcleo que executará a tarefa */
+            flag1 = 0;
+            }
+             
      }
 
 void onReceive(int packetSize)//LoRa receiver interrupt service
     {
       //if (packetSize == 0) return;
-      loraPacket = "";
+      //rssi = "RSSI: " + String(LoRa.packetRssi(), DEC);
         packSize = String(packetSize,DEC);
         while (LoRa.available()) {
         loraPacket += (char) LoRa.read();
         }
-        rssi = "RSSI: " + String(LoRa.packetRssi(), DEC);
-        Serial.println("pacote lora recebido, nivel " + rssi);
-        Serial.println("pacote: " + loraPacket);         
+        flag1 = 1;       
     }
 
 
-void sendWiFiPacket(String str){
+void sendWiFiPacket(void *parameter){
       if(wiFiMulti.run() == WL_CONNECTED){
-      //if (WiFi.status() == WL_CONNECTED){
-        client.setCACert(rootCACertificate);
-        client.connect(serverName, 443);       
-        delay(500);
-        if (client.connected() == false){
-            Serial.println("Connection failed!");}
-        else {
+        WiFiClientSecure *client = new WiFiClientSecure;
+        if (client){
+          client -> setCACert(rootCACertificate);
+          {      
             HTTPClient https; //cria instância do cliente http
             // Inicia o protocolo http com o cliente wifi e a url ou IP do servidor
-            https.begin(client, serverName);
-            //https.begin(client, serverName);
-            // Specify content-type header
-            https.addHeader("Host", "agroexperto.com.br");
-            https.addHeader("Content-Type", "application/x-www-form-urlencoded");      
+            https.begin(*client, serverName);
+            Serial.printf("server name: ");
+            //https.begin(serverName, rootCACertificate);
+            // Specify content-type header            
+            https.addHeader("Content-Type", "application/x-www-form-urlencoded");
+            https.addHeader("Connection", "close");      
             // Send HTTP POST request
-            int httpCode = https.POST(str);
+            Serial.println("pacote a ser enviado: " + loraPacket);
+            int httpCode = https.POST(loraPacket);
             delay(2000);
                 if (httpCode < 0) {
+                  Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
                   Serial.println("erro na requisição");
                   Serial.println(https.errorToString(httpCode));
                   Serial.println(https.getString());
                   //delay(60000);                      
                   }
                   else {
-                  Serial.println("Conectado");
+                  Serial.print("servidor responde: ");
                   Serial.println(https.getString());
                   }        
             // Free resources
             https.end();
-            client.stop();            
+          }
+            client -> stop();            
             }
           }              
          else {
           Serial.println("WiFi Disconnected");
-       }         
+       }
+       
+        Serial.println("Conectado");         
        loraPacket = "";
-    }
+       Serial.println("loraPacket = " + loraPacket);
+       vTaskDelete(NULL);         
+   }
 
 
 // Função que verifica se o app enviou um comando
