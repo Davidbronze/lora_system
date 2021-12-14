@@ -1,8 +1,11 @@
+
 //SERVER (Gateway remoto)
 //placa Heltec LoRa v2
+//obs: alterada a linha 316 da lib SimpleDHT para o valor de 10000 e
+//     alterada a linha 350 para o valor de 60 (limite entre 0 e 1)
 
+#include <SimpleDHT.h>
 #include <HTTPClient.h>
-#include <DHT.h>
 #include <heltec.h>
 #include <TaskScheduler.h>
 #include <vector>
@@ -14,8 +17,7 @@
 
 //Pino onde o relê está
 #define RELAY 13
-#define DHTTYPE DHT22  //Define o tipo de sensor DHT
-#define DHTPIN 12   //12 Pino de ligacao do DHT22
+#define DHTTYPE DHT22
 #define PIN_VL 36  // 36  Leitura do  Pluviômetro
 #define PL 37     //37  RST Pluviometro
 //observar que os pinos 2, 4, 5, 14, 15, 16, 19, 18, 21, 26, 27 não podem ser usados
@@ -38,18 +40,19 @@
   esp_now_peer_info_t slave;
 
 //define e inicializa as variáveis
-int minima = 99;
-int maxima = 0;
-int t;
-int h;
-int h_ant = 0;
-int t_ant = 0;
+const int DHTPIN = 23;   //Pino de ligacao do DHT22
+float minima = 99;
+float maxima = 0;
+float temp=0;
+float humid=0;
+float h_ant = 0;
+float t_ant = 0;
 int counter = 0;
 bool vl;
 const long intervDHT = 60000; //Intervalo de tempo entre leituras do DHT
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
 unsigned long lastDebounceTime = 0;
-const long debounceDelay = 100;
+const long debounceDelay = 200;
 bool lastState = 0;
 int reedCounter = 0;
 float precipitacao = 0.0;
@@ -70,20 +73,10 @@ String success;
 String incomingReadings;
 
 //Instancia o sensor
-DHT dht(DHTPIN, DHTTYPE);
+SimpleDHT22 dht(DHTPIN);
 
 //Objeto que vamos utilizar para guardar o ip recebido
 IPAddress myIP;
- 
-
-//Tarefas para verificar novos clientes e mensagens enviadas por estes
-//Scheduler scheduler;
-//void handleWeather();
-//void taskHandleClient();
-////Tarefa para verificar se uma nova conexão feita por aplicativo está sendo feita
-//Task t1(100, TASK_FOREVER, &handleWeather, &scheduler, true);
-////Tarefa para verificar se há novas mensagens vindas de aplicativo
-//Task t2(100, TASK_FOREVER, &taskHandleClient, &scheduler, true);
 
 
 void setup() {
@@ -269,7 +262,7 @@ void refreshDisplay(String connection) {
         Heltec.display->display();
       }
 
-void weatherDisplay(int temperatura, int max_s, int min_s){
+void weatherDisplay(int temperatura, int humidade, int max_s, int min_s){
       //Limpa o display
         Heltec.display->clear();
         //Atualiza informacoes da temperatura
@@ -277,8 +270,13 @@ void weatherDisplay(int temperatura, int max_s, int min_s){
         Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
         Heltec.display->drawString(64, 2, "AgroexPerto " + stationCode);
         Heltec.display->setFont(ArialMT_Plain_24);
-        Heltec.display->drawString(32, 26, String(temperatura));
-        Heltec.display->drawCircle(52, 32, 2);      
+        Heltec.display->drawString(32, 16, String(temperatura));
+        Heltec.display->drawCircle(52, 22, 2);
+        Heltec.display->drawString(32, 42, String(humidade));
+        Heltec.display->drawCircle(50, 48, 2);
+        Heltec.display->drawCircle(59, 61, 2);
+        Heltec.display->drawLine(50, 62, 58, 48);
+              
         //Atualiza maxima 
         Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
         Heltec.display->setFont(ArialMT_Plain_10);
@@ -308,7 +306,7 @@ void loop() {
       //Executa as tarefas que foram adicionadas ao scheduler
       //scheduler.execute();
       
-  weatherDisplay(t, maxima, minima);
+  weatherDisplay(temp, humid, maxima, minima);
       
   }
 
@@ -430,67 +428,86 @@ void sendLoRaPacket(String str) {
 void handleWeather(){
   //executa a rotina de coleta do DHT                                
               counter = counter + 1; //acrescenta no contador de leituras
-              Serial.println(counter); //mostra no monitor
               //Le a temperatura e a umidade do ar
-              t = dht.readTemperature();
-              h = dht.readHumidity();
+              float temperature = 0;
+              float humidity = 0;
+              int err = SimpleDHTErrSuccess;
+                  if ((err = dht.read2(&temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
+                    Serial.print("Read DHT22 failed, err = ");
+                    Serial.print(SimpleDHTErrCode(err));
+                    Serial.print(",");
+                    Serial.println(SimpleDHTErrDuration(err));
+                    Serial.println(temperature);
+                    return;
+                  }
+
+                  //Os valores foram lidos corretamente, então é seguro colocar nas variáveis
+                    temp = temperature;
+                    humid = humidity;
               
-                if (t > 100) {
-                  t = t_ant;}    //para evitar picos do sensor
-                if (h > 100) {
-                  h = h_ant;}   //para evitar picos do sensor
+                if (temp > 100) {
+                  temp = t_ant;}    //para evitar picos do sensor
+                if (humid > 100) {
+                  humid = h_ant;}   //para evitar picos do sensor
           
               //Mostra a temperatura e umidade no Serial Monitor
               Serial.print(F("Temperatura: "));
-              Serial.print(t);
+              Serial.print((float)temp);
               Serial.println(F(" °C "));
               Serial.print(F("Umidade Relativa: "));
-              Serial.print(h);
+              Serial.print((float)humid);
               Serial.println(" %");
+              Serial.println("=======");
               
                 //Atualiza as variaveis maxima e minima, se necessario
                 
-                if (t >= maxima){
-                  maxima = t;}
-                if (t <= minima){
-                  minima = t;}  
+                if (temp >= maxima){
+                  maxima = temp;}
+                if (temp <= minima){
+                  minima = temp;}  
               
               //Envia as informacoes para o display
-              weatherDisplay(t, maxima, minima);  
+              weatherDisplay(temp, humid, maxima, minima);
+              delay(100); 
           //===============================================================
           
                     if(counter >= 2){
                       counter = 0;            
                       
                       //Cria a string com os dados
-                      String body = "leit1=" + stationCode + "&leit2=" + t + "&leit3=" + h + "&leit4=" + precip;
+                      String body = "leit1=" + stationCode + "&leit2=" + temp + "&leit3=" + humid + "&leit4=" + precip;
                       //String body = "LoRa...";
                             sendLoRaPacket(body);
-                            Serial.println("lora sended?");
-                            LoRa.receive();                
+                            LoRa.receive();
+                            precipitacao=precip=0;
+                            reedCounter = 0;                
                           }            
-                 t_ant = t;
-                 h_ant = h;
-                 precipitacao=0;
+                 t_ant = temp;
+                 h_ant = humid;
+                 
                 }
 
 void readPluv(){
       // Contagem pulsos pluviometro
-        vl = digitalRead(PIN_VL);  // Inicia a leitura do pluviom            
+        pinMode(PIN_VL, INPUT);
+        digitalWrite(PIN_VL, LOW);
+        vl = digitalRead(PIN_VL);  // Inicia a leitura do pluviom           
         if ( vl == 1 && lastState == 0 ) {
-          Serial.println(" bascula acionada ");
           lastDebounceTime = millis();
           lastState = 1;
+          reedCounter +=1;
+          Serial.println(" bascula acionada ");
           }    
         if ((millis() - lastDebounceTime) > debounceDelay) {
           if (lastState == 1 && vl == 0){
-             Serial.println("nova leitura");
-            reedCounter +=1;
-            lastState = 0;
-            lastDebounceTime = 0;
-            precipitacao = float(reedCounter)*0.27;
+             Serial.println("nova leitura");            
+            lastState = 0;            
+            precipitacao = precipitacao + 0.27;
             precip = round(precipitacao);
-            Serial.print("Precipitação (mm)= ");
+            Serial.println(millis() - lastDebounceTime);
+            Serial.print ("Ciclos do pluvio = ");
+            Serial.println(reedCounter);
+            Serial.print("Precipitação = ");
             Serial.print(precipitacao);
             Serial.println(" mm");            
             Serial.println(precip);

@@ -19,58 +19,59 @@
 //#define RELAY 13
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "x"
-#define  PASSWORD "x"
+#define  SSID     "VIVOFIBRA-5F56"
+#define  PASSWORD "33d7405f56"
 const char* ssid = SSID;
 const char* password = PASSWORD;
-IPAddress staticIP(192,168,5, 199); //IP do GATEWAY
-IPAddress gateway ( 192, 168, 5, 1);
+IPAddress staticIP(192, 168, 15, 199); //IP do GATEWAY
+IPAddress gateway ( 192, 168, 15, 1);
 IPAddress subnet ( 255, 255, 255, 0 );
+IPAddress dnsA ( 8, 8, 8, 8);
 
 //url do servidor para enviar dados
-const char* serverName = "https://";
+const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
 
 //identificação da estação (código AgroexPerto)
 String stationCode = "xx-Gate-1";
 
-const char* hostAgro = ".br";
+const char* hostAgro = "agroexperto.com.br/databank/inseredados.php";
 
 const char* rootCACertificate = \
 "-----BEGIN CERTIFICATE-----\n" \
-"MIIGQTCCBSmgAwIBAgISBL8j44Y1FTRsGz3al6iCthw7MA0GCSqGSIb3DQEBCwUA\n" \
+"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\n" \
-"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\n" \
+"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\n" \
-"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\n" \
+"ggIBANsLVrdil1acxlB9zIxfBsxxg5/4fHQUaf8WVU9iYldZ3AKtnDRfXVjwbJcK\n" \
+"nDa+TywLWVXchVatLTX5xDyGOFO2a626UDxHt3/RMsIY4fT/MsWnru+PNpEJdboz\n" \
+"Iv4BL0JLACWArH4fwYsT7q3FmjNG9B2MPIwip6ziTHUx6aKfg9Q+k1Q4VBUkj8P5\n" \
+"/7GWFiszcT+m7d70sg0/ziK4uy849OTj+K/q/xG0mgpbrqH47GNHEfPNGDpZXJ8y\n" \
+"RliAUtTNJ1gk5HlRO7WvS/Tl+xi4x+S0mw21tSQ/Czfm7+rlE59lKIknBommg9VY\n" \
+"1xOOrinXqjMxOb5sGgyy4Dpwj9Gw+i+6k9NDwDZFYmBnO7sMuYihkoW+d/nIJRy7\n" \
+"ffaDAgasyJUZIfHry4AJpK4Hl4gJm1seJO0r7I1K5kdDI5oo5zE5khYkoJlyXSTv\n" \
+"X5S1yxxRUPjiOFcOJdpztzM/Tzp3KrWXiz3ouxXVhvjCsgNl6TN5SuRh26UrUV4o\n" \
+"6LzsVHHMe3nA1XJhmEeImq/+PrVWQD5Ww+cOqGYEq+loDdM2Iaf3cltM3n8XivSH\n" \
+"hYVXo8I+Ta07Uaf4wG6occYP/6PC6+yvtEBvhxvGOPThv2V33AIoF2B8IpOX2Rtq\n" \
+"Wu131sMR/1PF6YiAw1Pu4bfjKrg0NbQabrrO6nul2qWdcMK7AgMBAAGjggJlMIIC\n" \
+"YTAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMC\n" \
+"MAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFDHLElVE+cxt6DkwxERsxH1H5yXoMB8G\n" \
 "A1UdIwQYMBaAFBQusxe3WFbLrlAJQOYfr52LFMLGMFUGCCsGAQUFBwEBBEkwRzAh\n" \
 "BggrBgEFBQcwAYYVaHR0cDovL3IzLm8ubGVuY3Iub3JnMCIGCCsGAQUFBzAChhZo\n" \
 "dHRwOi8vcjMuaS5sZW5jci5vcmcvMDUGA1UdEQQuMCyCEmFncm9leHBlcnRvLmNv\n" \
 "bS5icoIWd3d3LmFncm9leHBlcnRvLmNvbS5icjBMBgNVHSAERTBDMAgGBmeBDAEC\n" \
 "ATA3BgsrBgEEAYLfEwEBATAoMCYGCCsGAQUFBwIBFhpodHRwOi8vY3BzLmxldHNl\n" \
-"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\n" \
-"xEQeg3v65yBl98Fvh1wSTmDeXvYt\n" \
+"bmNyeXB0Lm9yZzCCAQQGCisGAQQB1nkCBAIEgfUEgfIA8AB3AJQgvB6O1Y1siHMf\n" \
+"gosiLA3R2k1ebE+UPWHbTi9YTaLCAAABeX+OV+gAAAQDAEgwRgIhAJTq/IJ8m8sv\n" \
+"kxqE+suhryotVv1BrTA5CXdSwvZLsNoeAiEAkgxO3Y+6U5i7eL8ZQ22JGYGrIDSH\n" \
+"eQ4basGl6WfAt/kAdQB9PvL4j/+IVWgkwsDKnlKJeSvFDngJfy5ql2iZfiLw1wAA\n" \
+"AXl/jlhBAAAEAwBGMEQCIDwSUYNZnVi2DROG2tk+I52ymQvUwEvHL/grlZR8/XGG\n" \
+"AiAOLIRtyiUBH0oavQ98BzFdQ4xazFrVn0Eey7+4nL21BTANBgkqhkiG9w0BAQsF\n" \
+"AAOCAQEALO81tY6Q90R90h2jRVrWPMmNe6ros3EjF2iIq0zMhZreCd2gyiMDS9w3\n" \
+"whfAtzuP/wPNAQDkQqUmbUeqg8FFPocPrlXAmqPUlDfw0l3gG7z1dl4ip0JFmuno\n" \
+"lKG8+DBATTiczjnqe7r98+NBmVLa5Ug1vPq0QWXBzGnBU1X/r9ZnR9C8it7as+kU\n" \
+"sEYb1FFF0pMoHPZ3E+8gRVOE9Q9Pt9fj1b6RBFhLlNKM0r4so26e/DTQMRN53MLf\n" \
+"vV4zKn2CXktf6jZEGKGPeHaXV2DiEZ4M7xeKI+hzAULQfWrXzLATO/Jyxpet+O9+\n" \
+"eUZacl3zSciPM0dEFL5prRmQj6/glQ==\n" \
 "-----END CERTIFICATE-----\n";
 
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
@@ -86,8 +87,6 @@ WiFiServer server(port);
 
 WiFiMulti wiFiMulti;
 
-WiFiClientSecure client;
-
 // Vetor com os clientes que se conectarão no ESP
 //std::vector<WiFiClient> clients;
 
@@ -102,12 +101,9 @@ Task t1(100, TASK_FOREVER, &taskGetCommand, &scheduler, true);
 
 //Id e estados deste esp (altere para cada esp)
 String ID = "GATEWAY1";
-String ID_ON = ID + " ON";
-String ID_OFF = ID + " OFF";
 String appCmd = "";
 bool ledStatus = false;
-//Variável para guardar o valor do estado atual do relê 
-String currentState = ID_OFF;
+
 String packSize = "--";
 String rssi = "RSSI --";
 //string que recebe o pacote lora
@@ -117,9 +113,7 @@ bool flag1 = 0;
 
 void setup() {
       //Coloca tudo em maiúsculo
-      loraPacket.reserve(50);
-      ID_ON.toUpperCase();
-      ID_OFF.toUpperCase();    
+      loraPacket.reserve(50); 
       Heltec.begin(true /*Ativa o display*/, true /*Ativa lora*/, true /*Ativa informações pela serial*/, true /*Ativa PABOOST*/, BAND /*frequência*/);     
       //Inicializa o display
       setupDisplay();    
@@ -136,7 +130,8 @@ void setup() {
       
       //Inicializa o agendador de tarefas
       scheduler.startNow();
-      
+
+      Serial.print("core principal= ");
       Serial.println(xPortGetCoreID());
 
       Serial.println("Setup finalizado");
@@ -163,7 +158,7 @@ void setupWiFi() {
       Serial.print("Conectando");
       //Faz o ESP se conectar à rede WiFi
       WiFi.setAutoConnect(true);
-      WiFi.config (staticIP, gateway, subnet);
+      WiFi.config (staticIP, gateway, subnet, dnsA);
       wiFiMulti.addAP(ssid, password);
       //WiFi.begin(ssid, password);    
         //Enquanto o ESP não se conectar à rede
@@ -202,7 +197,7 @@ void refreshDisplay(String state) {
       Heltec.display->clear();
       Heltec.display->setFont(ArialMT_Plain_16);
       //Exibe o estado atual do relê
-      Heltec.display->drawString(0, 0, currentState);
+      Heltec.display->drawString(0, 0, ID);
       //Exibe o ip deste esp para ser utilizado no aplicativo
       Heltec.display->setFont(ArialMT_Plain_10);
       Heltec.display->drawString(0, 25, state);
@@ -213,7 +208,7 @@ void gatewayDisplay(String pct) {
       //Limpa o display
       Heltec.display->clear();
       //Exibe o estado atual do relê
-      Heltec.display->drawString(0, 0, currentState);
+      Heltec.display->drawString(0, 0, ID);
       Heltec.display->drawString(0, 25, "Msg recebida: ");
       Heltec.display->drawString(0, 40, pct);
       Heltec.display->display();
@@ -252,46 +247,46 @@ void onReceive(int packetSize)//LoRa receiver interrupt service
 
 void sendWiFiPacket(void *parameter){
       if(wiFiMulti.run() == WL_CONNECTED){
-        WiFiClientSecure *client = new WiFiClientSecure;
-        if (client){
-          client -> setCACert(rootCACertificate);
-          {      
-            HTTPClient https; //cria instância do cliente http
+           WiFiClientSecure client;
+           client.setCACert(rootCACertificate);
+           client.connect(serverName, 443);
+           uint8_t indicator = client.connected();
+           Serial.print("cliente está conectado? ");
+           Serial.println(indicator);
+          {     
+            HTTPClient httpsAgro; //cria instância do cliente http
             // Inicia o protocolo http com o cliente wifi e a url ou IP do servidor
-            https.begin(*client, serverName);
-            Serial.printf("server name: ");
-            //https.begin(serverName, rootCACertificate);
+            Serial.print("begin = ");
+            //Serial.println(initialization);
+            httpsAgro.begin(serverName, rootCACertificate);
             // Specify content-type header            
-            https.addHeader("Content-Type", "application/x-www-form-urlencoded");
-            https.addHeader("Connection", "close");      
+            httpsAgro.addHeader("Content-Type", "application/x-www-form-urlencoded");
             // Send HTTP POST request
             Serial.println("pacote a ser enviado: " + loraPacket);
-            int httpCode = https.POST(loraPacket);
-            delay(2000);
+            int httpCode = httpsAgro.POST(loraPacket);
+            delay(100);
                 if (httpCode < 0) {
-                  Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
-                  Serial.println("erro na requisição");
-                  Serial.println(https.errorToString(httpCode));
-                  Serial.println(https.getString());
+                  Serial.printf("[HTTPS] POST... code: %d\n", httpCode);
+                  Serial.println(httpsAgro.errorToString(httpCode));
                   //delay(60000);                      
                   }
-                  else {
+                else {
                   Serial.print("servidor responde: ");
-                  Serial.println(https.getString());
+                  Serial.println(httpsAgro.getString());
                   }        
             // Free resources
-            https.end();
+            httpsAgro.end();
           }
-            client -> stop();            
-            }
+            client.stop();            
+            
           }              
-         else {
+      else {
           Serial.println("WiFi Disconnected");
        }
-       
-        Serial.println("Conectado");         
+                
        loraPacket = "";
-       Serial.println("loraPacket = " + loraPacket);
+       Serial.print("loraPacket = ");
+       Serial.println(loraPacket);
        vTaskDelete(NULL);         
    }
 
