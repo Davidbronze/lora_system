@@ -18,61 +18,9 @@
 //Pino onde o relê está
 //#define RELAY 13
 
-//SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "VIVOFIBRA-5F56"
-#define  PASSWORD "33d7405f56"
-const char* ssid = SSID;
-const char* password = PASSWORD;
-IPAddress staticIP(192, 168, 15, 199); //IP do GATEWAY
-IPAddress gateway ( 192, 168, 15, 1);
-IPAddress subnet ( 255, 255, 255, 0 );
-IPAddress dnsA ( 8, 8, 8, 8);
+//Colar abaixo as credenciais
+//
 
-//url do servidor para enviar dados
-const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
-
-//identificação da estação (código AgroexPerto)
-String stationCode = "xx-Gate-1";
-
-const char* hostAgro = "agroexperto.com.br/databank/inseredados.php";
-
-const char* rootCACertificate = \
-"-----BEGIN CERTIFICATE-----\n" \
-"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\n" \
-"eUZacl3zSciPM0dEFL5prRmQj6/glQ==\n" \
-"-----END CERTIFICATE-----\n";
 
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
 unsigned long lastTimeCmd = 0;
