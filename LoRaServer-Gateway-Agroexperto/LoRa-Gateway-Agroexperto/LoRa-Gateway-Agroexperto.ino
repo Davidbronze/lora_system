@@ -19,7 +19,30 @@
 //#define RELAY 13
 
 //Colar abaixo as credenciais
-//
+
+//SSID e senha do roteador ao qual o gateway vai conectar
+#define  SSID     "xxxxxxxxxxxxx"
+#define  PASSWORD "xxxxxxxxxxxxxx"
+const char* ssid = SSID;
+const char* password = PASSWORD;
+IPAddress staticIP(192, 168, 15, 199); //IP do GATEWAY
+IPAddress gateway ( 192, 168, 15, 1);
+IPAddress subnet ( 255, 255, 255, 0 );
+IPAddress dnsA ( 8, 8, 8, 8);
+
+//url do servidor para enviar dados
+const char* serverName = "https://xxxxxxxxx.com.br/xxxxxxxxx.php";
+
+//identificação da estação (código AgroexPerto)
+String stationCode = "xx-Gate-1";
+
+const char* hostAgro = "zzzzzzzzz.com.br/xxxxxxxxxxxxxxx.php";
+
+const char* rootCACertificate = \
+"-----BEGIN CERTIFICATE-----\n" \
+"xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\
+"-----END CERTIFICATE-----\n";
+
 
 
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
