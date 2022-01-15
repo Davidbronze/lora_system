@@ -4,7 +4,10 @@
 //obs: alterada a linha 316 da lib SimpleDHT para o valor de 10000 e
 //     alterada a linha 350 para o valor de 60 (limite entre 0 e 1)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1ff5790cc5c0d9778831276d89dd8cd26b4a1381
 #include <SimpleDHT.h>
 #include <HTTPClient.h>
 #include <heltec.h>
@@ -271,6 +274,7 @@ void weatherDisplay(int temperatura, int humidade, int max_s, int min_s){
         Heltec.display->setFont(ArialMT_Plain_10);
         Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
         Heltec.display->drawString(64, 2, "AgroexPerto " + stationCode);
+<<<<<<< HEAD
         Heltec.display->setFont(ArialMT_Plain_16);
         Heltec.display->drawString(32, 16, String(temperatura));
         //Heltec.display->drawCircle(52, 22, 2);
@@ -278,6 +282,15 @@ void weatherDisplay(int temperatura, int humidade, int max_s, int min_s){
         //Heltec.display->drawCircle(50, 48, 2);
         //Heltec.display->drawCircle(59, 61, 2);
         //Heltec.display->drawLine(50, 62, 58, 48);
+=======
+        Heltec.display->setFont(ArialMT_Plain_24);
+        Heltec.display->drawString(32, 16, String(temperatura));
+        Heltec.display->drawCircle(52, 22, 2);
+        Heltec.display->drawString(32, 42, String(humidade));
+        Heltec.display->drawCircle(50, 48, 2);
+        Heltec.display->drawCircle(59, 61, 2);
+        Heltec.display->drawLine(50, 62, 58, 48);
+>>>>>>> 1ff5790cc5c0d9778831276d89dd8cd26b4a1381
               
         //Atualiza maxima 
         Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -461,7 +474,11 @@ void handleWeather(){
               Serial.print((float)humid);
               Serial.println(" %");
               Serial.println("=======");
+<<<<<<< HEAD
 
+=======
+              
+>>>>>>> 1ff5790cc5c0d9778831276d89dd8cd26b4a1381
                 //Atualiza as variaveis maxima e minima, se necessario
                 
                 if (temp >= maxima){
