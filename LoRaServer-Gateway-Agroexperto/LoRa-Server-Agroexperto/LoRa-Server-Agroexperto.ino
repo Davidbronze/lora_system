@@ -478,7 +478,7 @@ void handleWeather(){
               delay(100); 
           //===============================================================
           
-                    if(counter >= 2){
+                    if(counter >= 60){
                       counter = 0;            
                       
                       //Cria a string com os dados

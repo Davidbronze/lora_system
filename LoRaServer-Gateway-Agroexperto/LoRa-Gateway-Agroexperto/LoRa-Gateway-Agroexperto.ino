@@ -265,19 +265,21 @@ void sendWiFiPacket(void *parameter){
 
 // Função que verifica se o app enviou um comando
 void taskGetCommand(){
-        if(millis()-lastTimeCmd >=13000){
-          ledStatus == true ? ledStatus = false : ledStatus = true;
-          digitalWrite(25, LOW);
-          lastTimeCmd = millis(); 
-          ledStatus == true ? appCmd = "REMOTE1relay2On" : appCmd = "REMOTE1relay2Off";
+//        if(millis()-lastTimeCmd >=13000){
+//          ledStatus == true ? ledStatus = false : ledStatus = true;
+//          digitalWrite(25, LOW);
+//          lastTimeCmd = millis(); 
+//          ledStatus == true ? appCmd = "REMOTE1relay2On" : appCmd = "REMOTE1relay2Off";
               //Instancia cliente wifi
-              //WiFiClient wifiClient = server.available();                
-              // if(wifiClient.available()){
+              WiFiClient wifiClient = server.available();    
+               if(wifiClient.available()){
                 // Recebemos a String até o '\n'
-              //  appCmd = wifiClient.readStringUntil('\n');
+                Serial.println("Comando recebido via web");
+               appCmd = wifiClient.readStringUntil('\n');
           // Verificamos o comando, enviando por parâmetro a String appCmd
           handleCommand(appCmd);}
       }
+}
 //
 // Função que verifica o comando vindo do app
 void handleCommand(String cmd){
