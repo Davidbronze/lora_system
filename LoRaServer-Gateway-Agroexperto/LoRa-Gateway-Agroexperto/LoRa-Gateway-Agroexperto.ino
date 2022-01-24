@@ -1,8 +1,11 @@
-
-
 //GATEWAY com DDNS - Gateway central
 
-
+#include <HTTP_Method.h>
+#include <Uri.h>
+#include <WebServer.h>
+#include <HttpsOTAUpdate.h>
+#include <Update.h>
+#include <ESPmDNS.h>
 #include <ssl_client.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
@@ -22,8 +25,9 @@
 
 //SSID e senha do roteador ao qual o gateway vai conectar
 #define  SSID     "xxxxxxxxxxxxx"
+
 #define  PASSWORD "xxxxxxxxxxxxxx"
->>>>>>> 1ff5790cc5c0d9778831276d89dd8cd26b4a1381
+
 const char* ssid = SSID;
 const char* password = PASSWORD;
 IPAddress staticIP(192, 168, 15, 199); //IP do GATEWAY
@@ -41,11 +45,15 @@ const char* hostAgro = "zzzzzzzzz.com.br/xxxxxxxxxxxxxxx.php";
 
 const char* rootCACertificate = \
 "-----BEGIN CERTIFICATE-----\n" \
-"xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\
->>>>>>> 1ff5790cc5c0d9778831276d89dd8cd26b4a1381
+"xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" \
+
 "-----END CERTIFICATE-----\n";
 
 //============================
+//host para OTA
+
+const char* host = "esp32";
+
 //OTA forms
 
 const char* loginIndex = 
@@ -140,7 +148,7 @@ IPAddress myIP;
 const int port = 443; 
 // Objeto WiFi Server, o ESP será o servidor
 WiFiServer server(port);
-
+WebServer webServerOta(80);
 WiFiMulti wiFiMulti;
 
 // Vetor com os clientes que se conectarão no ESP
@@ -181,7 +189,7 @@ void setup() {
       LoRa.onReceive(onReceive);
       LoRa.receive();
 
-    void updateOTA();
+      updateOTA();
       //Inicializa o server ao qual vc vai se conectar utilizando o ddns
       server.begin();
       
@@ -272,7 +280,7 @@ void gatewayDisplay(String pct) {
     }
 
 void updateOTA(){
-      /*use mdns for host name resolution*/
+     /*use mdns for host name resolution*/
   if (!MDNS.begin(host)) { //http://esp32.local
     Serial.println("Error setting up MDNS responder!");
     while (1) {
@@ -281,18 +289,18 @@ void updateOTA(){
   }
   Serial.println("mDNS responder started");
   /*return index page which is stored in serverIndex */
-  server.on("/", HTTP_GET, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/html", loginIndex);
+  webServerOta.on("/", HTTP_GET, []() {
+    webServerOta.sendHeader("Connection", "close");
+    webServerOta.send(200, "text/html", loginIndex);
   });
-  server.on("/serverIndex", HTTP_GET, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/html", serverIndex);
+  webServerOta.on("/serverIndex", HTTP_GET, []() {
+    webServerOta.sendHeader("Connection", "close");
+    webServerOta.send(200, "text/html", serverIndex);
   });
   /*handling uploading firmware file */
-  server.on("/update", HTTP_POST, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+  webServerOta.on("/update", HTTP_POST, []() {
+    webServerOta.sendHeader("Connection", "close");
+    webServerOta.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
     ESP.restart();
   }, []() {
     HTTPUpload& upload = server.upload();
@@ -314,6 +322,7 @@ void updateOTA(){
       }
     }
   });
+  webServerOta.begin();
 }
 
 
