@@ -24,9 +24,9 @@
 //Colar abaixo as credenciais
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "xxxxxxxxxxxxx"
+#define  SSID     "GalaxyM31616E"
 
-#define  PASSWORD "xxxxxxxxxxxxxx"
+#define  PASSWORD "osdn3952"
 
 const char* ssid = SSID;
 const char* password = PASSWORD;
@@ -36,17 +36,16 @@ IPAddress subnet ( 255, 255, 255, 0 );
 IPAddress dnsA ( 8, 8, 8, 8);
 
 //url do servidor para enviar dados
-const char* serverName = "https://xxxxxxxxx.com.br/xxxxxxxxx.php";
+const char* serverName = "https://xxxxxxxxxxxxxxxxxxxxxxxx.php";
 
 //identificação da estação (código AgroexPerto)
-String stationCode = "xx-Gate-1";
+String stationCode = "201-Gate-1";
 
-const char* hostAgro = "zzzzzzzzz.com.br/xxxxxxxxxxxxxxx.php";
+const char* hostAgro = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.php";
 
 const char* rootCACertificate = \
 "-----BEGIN CERTIFICATE-----\n" \
-"xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" \
-
+"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" \
 "-----END CERTIFICATE-----\n";
 
 //============================
@@ -234,6 +233,7 @@ void setupWiFi() {
               //Esperamos 100 milisegundos
               delay(100);
               Serial.print(".");
+              Serial.println("");
             }
       if (wiFiMulti.run() == WL_CONNECTED){
       //if (WiFi.status() == WL_CONNECTED){ 
@@ -253,6 +253,7 @@ void setupWiFi() {
           Heltec.display -> drawString(0, 25, "...Failed");
           Heltec.display -> display();
           delay(5000);
+          Serial.println("Conezão wifi falhou");
           refreshDisplay("Not connected to wifi");
       }
     }
@@ -280,54 +281,54 @@ void gatewayDisplay(String pct) {
     }
 
 void updateOTA(){
-     /*use mdns for host name resolution*/
-  if (!MDNS.begin(host)) { //http://esp32.local
-    Serial.println("Error setting up MDNS responder!");
-    while (1) {
-      delay(1000);
-    }
-  }
-  Serial.println("mDNS responder started");
-  /*return index page which is stored in serverIndex */
-  webServerOta.on("/", HTTP_GET, []() {
-    webServerOta.sendHeader("Connection", "close");
-    webServerOta.send(200, "text/html", loginIndex);
-  });
-  webServerOta.on("/serverIndex", HTTP_GET, []() {
-    webServerOta.sendHeader("Connection", "close");
-    webServerOta.send(200, "text/html", serverIndex);
-  });
-  /*handling uploading firmware file */
-  webServerOta.on("/update", HTTP_POST, []() {
-    webServerOta.sendHeader("Connection", "close");
-    webServerOta.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-    ESP.restart();
-  }, []() {
-    HTTPUpload& upload = webServerOta.upload();
-    if (upload.status == UPLOAD_FILE_START) {
-      Serial.printf("Update: %s\n", upload.filename.c_str());
-      if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
-        Update.printError(Serial);
+         /*use mdns for host name resolution*/
+      if (!MDNS.begin(host)) { //http://esp32.local
+        Serial.println("Error setting up MDNS responder!");
+        while (1) {
+          delay(1000);
+        }
       }
-    } else if (upload.status == UPLOAD_FILE_WRITE) {
-      /* flashing firmware to ESP*/
-      if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-        Update.printError(Serial);
+      Serial.println("mDNS responder started");
+      /*return index page which is stored in serverIndex */
+      webServerOta.on("/", HTTP_GET, []() {
+        webServerOta.sendHeader("Connection", "close");
+        webServerOta.send(200, "text/html", loginIndex);
+      });
+      webServerOta.on("/serverIndex", HTTP_GET, []() {
+        webServerOta.sendHeader("Connection", "close");
+        webServerOta.send(200, "text/html", serverIndex);
+      });
+      /*handling uploading firmware file */
+      webServerOta.on("/update", HTTP_POST, []() {
+        webServerOta.sendHeader("Connection", "close");
+        webServerOta.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+        ESP.restart();
+      }, []() {
+        HTTPUpload& upload = webServerOta.upload();
+        if (upload.status == UPLOAD_FILE_START) {
+          Serial.printf("Update: %s\n", upload.filename.c_str());
+          if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
+            Update.printError(Serial);
+          }
+        } else if (upload.status == UPLOAD_FILE_WRITE) {
+          /* flashing firmware to ESP*/
+          if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+            Update.printError(Serial);
+          }
+        } else if (upload.status == UPLOAD_FILE_END) {
+          if (Update.end(true)) { //true to set the size to the current progress
+            Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+          } else {
+            Update.printError(Serial);
+          }
+        }
+      });
+      webServerOta.begin();
       }
-    } else if (upload.status == UPLOAD_FILE_END) {
-      if (Update.end(true)) { //true to set the size to the current progress
-        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
-      } else {
-        Update.printError(Serial);
-      }
-    }
-  });
-  webServerOta.begin();
-}
 
 
 void loop() {
-      webServerOta.handleClient();
+      webServerOta.handleClient();      
       delay(1);
        //Executa as tarefas que foram adicionadas ao scheduler              
       scheduler.execute();
@@ -423,7 +424,7 @@ void taskGetCommand(){
           // Verificamos o comando, enviando por parâmetro a String appCmd
           handleCommand(appCmd);}
       }
-}
+
 //
 // Função que verifica o comando vindo do app
 void handleCommand(String cmd){
