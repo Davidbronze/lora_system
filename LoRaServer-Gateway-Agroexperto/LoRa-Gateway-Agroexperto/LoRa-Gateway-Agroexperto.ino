@@ -24,9 +24,9 @@
 //Colar abaixo as credenciais
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "GalaxyM31616E"
+#define  SSID     "xxxxxxxxxxxxxxxxx"
 
-#define  PASSWORD "osdn3952"
+#define  PASSWORD "xxxxxxxxxxxxxxxx"
 
 const char* ssid = SSID;
 const char* password = PASSWORD;
@@ -36,16 +36,17 @@ IPAddress subnet ( 255, 255, 255, 0 );
 IPAddress dnsA ( 8, 8, 8, 8);
 
 //url do servidor para enviar dados
-const char* serverName = "https://xxxxxxxxxxxxxxxxxxxxxxxx.php";
+const char* serverName = "https://xxxxxxxxxxxxxxxxxxxx.php";
 
 //identificação da estação (código AgroexPerto)
 String stationCode = "201-Gate-1";
 
-const char* hostAgro = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.php";
+const char* hostAgro = "xxxxxxxxxxxxxxxx.php";
 
 const char* rootCACertificate = \
 "-----BEGIN CERTIFICATE-----\n" \
-"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" \
+"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" \
+
 "-----END CERTIFICATE-----\n";
 
 //============================
