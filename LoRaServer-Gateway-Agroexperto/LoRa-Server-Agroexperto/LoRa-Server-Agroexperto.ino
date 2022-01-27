@@ -269,10 +269,10 @@ void weatherDisplay(int temperatura, int humidade, int max_s, int min_s){
         Heltec.display->setFont(ArialMT_Plain_10);
         Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
         Heltec.display->drawString(64, 2, "AgroexPerto " + stationCode);
-        Heltec.display->setFont(ArialMT_Plain_16);
-        Heltec.display->drawString(32, 16, String(temperatura));
+        //Heltec.display->setFont(ArialMT_Plain_16);
+        //Heltec.display->drawString(32, 16, String(temperatura));
         //Heltec.display->drawCircle(52, 22, 2);
-        Heltec.display->drawString(32, 42, String(humidade));
+        //Heltec.display->drawString(32, 42, String(humidade));
         //Heltec.display->drawCircle(50, 48, 2);
         //Heltec.display->drawCircle(59, 61, 2);
         //Heltec.display->drawLine(50, 62, 58, 48);
@@ -482,8 +482,9 @@ void handleWeather(){
                       counter = 0;            
                       
                       //Cria a string com os dados
-                      String body = "leit1=" + stationCode + "&leit2=" + temp + "&leit3=" + humid + "&leit4=" + precip;
+                      String body = "leit1=" + stationCode + "&leit2=" + int(temp) + "&leit3=" + int(humid) + "&leit4=" + int(precip);
                       //String body = "LoRa...";
+                      Serial.println(body);
                             sendLoRaPacket(body);
                             LoRa.receive();
                             precipitacao=precip=0;
@@ -521,4 +522,3 @@ void readPluv(){
           }
       }  
   }
-      
