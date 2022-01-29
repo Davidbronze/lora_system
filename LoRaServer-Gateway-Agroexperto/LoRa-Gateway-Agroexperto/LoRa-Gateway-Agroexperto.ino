@@ -30,7 +30,7 @@
 
 const char* ssid = SSID;
 const char* password = PASSWORD;
-IPAddress staticIP(192, 168, 15, 199); //IP do GATEWAY
+IPAddress staticIP(192, 168, 15, 111); //IP do GATEWAY
 IPAddress gateway ( 192, 168, 15, 1);
 IPAddress subnet ( 255, 255, 255, 0 );
 IPAddress dnsA ( 8, 8, 8, 8);
