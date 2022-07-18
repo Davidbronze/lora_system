@@ -1,3 +1,4 @@
+
 //GATEWAY com DDNS - Gateway central
 
 #include <HTTP_Method.h>
@@ -11,7 +12,6 @@
 #include <HTTPClient.h>
 #include <heltec.h>
 #include <TaskScheduler.h>
-#include <vector>
 #include <WiFi.h>
 #include <WiFiMulti.h>
 
@@ -24,9 +24,9 @@
 //Colar abaixo as credenciais
 
 //SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "xxxxxxxxxxxxxxxxx"
+#define  SSID     "VIVOFIBRA-5F56"
 
-#define  PASSWORD "xxxxxxxxxxxxxxxx"
+#define  PASSWORD "33d7405f56"
 
 const char* ssid = SSID;
 const char* password = PASSWORD;
@@ -36,20 +36,54 @@ IPAddress subnet ( 255, 255, 255, 0 );
 IPAddress dnsA ( 8, 8, 8, 8);
 
 //url do servidor para enviar dados
-const char* serverName = "https://xxxxxxxxxxxxxxxxxxxx.php";
+const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
 
 //identificação da estação (código AgroexPerto)
-String stationCode = "201-Gate-1";
+String stationCode = "xx-Gate-1";
+String firmwareVersion = "1.3";
 
-const char* hostAgro = "xxxxxxxxxxxxxxxx.php";
+const char* hostAgro = "agroexperto.com.br/databank/inseredados.php";
 
 const char* rootCACertificate = \
 "-----BEGIN CERTIFICATE-----\n" \
-"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" \
-
-"-----END CERTIFICATE-----\n";
+"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\n" \
+"wAahQ8S5gW+dsoLxDB7o4G5SClao2Q==\n" \
+"-----END CERTIFICATE-----\n" ;
 
 //============================
+
 //host para OTA
 
 const char* host = "esp32";
@@ -145,26 +179,16 @@ unsigned long lastTimeCmd = 0;
 IPAddress myIP;
 
 // Porta do server que vc vai utilizar para conectar pelo aplicativo
-const int port = 443; 
+const int port = 80; 
 // Objeto WiFi Server, o ESP será o servidor
 WiFiServer server(port);
 WebServer webServerOta(80);
 WiFiMulti wiFiMulti;
 
 // Vetor com os clientes que se conectarão no ESP
-//std::vector<WiFiClient> clients;
-
-//Tarefas para verificar novos clientes e mensagens enviadas por estes
-Scheduler scheduler;
-//void taskNewClients();
-void taskGetCommand();
-////Tarefa para verificar se uma nova conexão feita por aplicativo está sendo feita
-//Task t1(100, TASK_FOREVER, &taskNewClients, &scheduler, true);
-////Tarefa para verificar se há novas mensagens vindas de aplicativo
-Task t1(100, TASK_FOREVER, &taskGetCommand, &scheduler, true);
 
 //Id e estados deste esp (altere para cada esp)
-String ID = "GATEWAY1";
+String ID = "GATEWAY1-";
 String appCmd = "";
 bool ledStatus = false;
 
@@ -194,7 +218,7 @@ void setup() {
       server.begin();
       
       //Inicializa o agendador de tarefas
-      scheduler.startNow();
+      //scheduler.startNow();
 
       Serial.print("core principal= ");
       Serial.println(xPortGetCoreID());
@@ -254,7 +278,7 @@ void setupWiFi() {
           Heltec.display -> drawString(0, 25, "...Failed");
           Heltec.display -> display();
           delay(5000);
-          Serial.println("Conezão wifi falhou");
+          Serial.println("Conexão wifi falhou");
           refreshDisplay("Not connected to wifi");
       }
     }
@@ -264,7 +288,7 @@ void refreshDisplay(String state) {
       Heltec.display->clear();
       Heltec.display->setFont(ArialMT_Plain_16);
       //Exibe o estado atual do relê
-      Heltec.display->drawString(0, 0, ID);
+      Heltec.display->drawString(0, 0, ID + firmwareVersion);
       //Exibe o ip deste esp para ser utilizado no aplicativo
       Heltec.display->setFont(ArialMT_Plain_10);
       Heltec.display->drawString(0, 25, state);
@@ -291,49 +315,55 @@ void updateOTA(){
       }
       Serial.println("mDNS responder started");
       /*return index page which is stored in serverIndex */
-      webServerOta.on("/", HTTP_GET, []() {
-        webServerOta.sendHeader("Connection", "close");
-        webServerOta.send(200, "text/html", loginIndex);
-      });
-      webServerOta.on("/serverIndex", HTTP_GET, []() {
-        webServerOta.sendHeader("Connection", "close");
-        webServerOta.send(200, "text/html", serverIndex);
-      });
+      webServerOta.on("/", HTTP_GET,
+                      []() {
+                        webServerOta.sendHeader("Connection", "close");
+                        webServerOta.send(200, "text/html", loginIndex);
+                      });
+      webServerOta.on("/command", taskGetCommand);
+      webServerOta.on("/serverIndex", HTTP_GET,
+                      []() {
+                        webServerOta.sendHeader("Connection", "close");
+                        webServerOta.send(200, "text/html", serverIndex);
+                      });
       /*handling uploading firmware file */
-      webServerOta.on("/update", HTTP_POST, []() {
-        webServerOta.sendHeader("Connection", "close");
-        webServerOta.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-        ESP.restart();
-      }, []() {
-        HTTPUpload& upload = webServerOta.upload();
-        if (upload.status == UPLOAD_FILE_START) {
-          Serial.printf("Update: %s\n", upload.filename.c_str());
-          if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
-            Update.printError(Serial);
-          }
-        } else if (upload.status == UPLOAD_FILE_WRITE) {
-          /* flashing firmware to ESP*/
-          if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-            Update.printError(Serial);
-          }
-        } else if (upload.status == UPLOAD_FILE_END) {
-          if (Update.end(true)) { //true to set the size to the current progress
-            Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
-          } else {
-            Update.printError(Serial);
-          }
-        }
-      });
+      webServerOta.on("/update", HTTP_POST,
+                      []() {
+                        webServerOta.sendHeader("Connection", "close");
+                        webServerOta.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+                        ESP.restart();},
+                      []() {
+                        HTTPUpload& upload = webServerOta.upload();
+                          if (upload.status == UPLOAD_FILE_START) {
+                            Serial.printf("Update: %s\n", upload.filename.c_str());
+                            if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
+                              Update.printError(Serial);
+                            }
+                          } else if (upload.status == UPLOAD_FILE_WRITE) {
+                            /* flashing firmware to ESP*/
+                            if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+                              Update.printError(Serial);
+                            }
+                          } else if (upload.status == UPLOAD_FILE_END) {
+                            if (Update.end(true)) { //true to set the size to the current progress
+                              Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+                            } else {
+                              Update.printError(Serial);
+                            }
+                          }
+                        });
       webServerOta.begin();
       }
 
 
 void loop() {
+      
+       //Executa as tarefas que foram adicionadas ao scheduler              
+      //scheduler.execute();
+
       webServerOta.handleClient();      
       delay(1);
-       //Executa as tarefas que foram adicionadas ao scheduler              
-      scheduler.execute();
-
+      
       //enviamos a mensagem por wifi para a rede
       if (flag1 == 1){
         xTaskCreatePinnedToCore(
@@ -409,21 +439,12 @@ void sendWiFiPacket(void *parameter){
 
 // Função que verifica se o app enviou um comando
 void taskGetCommand(){
-//        if(millis()-lastTimeCmd >=13000){
-//          ledStatus == true ? ledStatus = false : ledStatus = true;
-//          digitalWrite(25, LOW);
-//          lastTimeCmd = millis(); 
-//          ledStatus == true ? appCmd = "REMOTE1relay2On" : appCmd = "REMOTE1relay2Off";
-              //Instancia cliente wifi
-              WiFiClient wifiClient = server.available();    
-               if(wifiClient.available()){
-                // Recebemos a String até o '\n'
-                Serial.println("Comando recebido via web");
-               appCmd = wifiClient.readStringUntil('\n');
-               wifiClient.println("HTTP/1.1 200 OK");
-               wifiClient.println("Content-type:text/html");
+               appCmd = webServerOta.arg(0);
+               Serial.println(appCmd);
+               Serial.println("comando recebido");
+               webServerOta.send(200,"comando recebido");
           // Verificamos o comando, enviando por parâmetro a String appCmd
-          handleCommand(appCmd);}
+          handleCommand(appCmd);
       }
 
 //
@@ -455,3 +476,5 @@ void sendLoRaPacket(String str) {
         refreshDisplay(str);
         digitalWrite(25, LOW);
       }
+
+      
