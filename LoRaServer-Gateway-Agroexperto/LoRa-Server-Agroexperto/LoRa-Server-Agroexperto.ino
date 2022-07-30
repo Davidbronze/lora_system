@@ -52,7 +52,7 @@ bool vl;
 const long intervDHT = 60000; //Intervalo de tempo entre leituras do DHT
 unsigned long previousMillis = 0;  //Armazena o valor (tempo) da ultima leitura
 unsigned long lastDebounceTime = 0;
-const long debounceDelay = 500;
+const long debounceDelay = 200;
 bool lastState = 0;
 int reedCounter = 0;
 float precipitacao = 0.0;
@@ -65,7 +65,7 @@ String ID_ON = ID + " ON";
 String ID_OFF = ID + " OFF";
 //identificação da estação (código AgroexPerto)
 String stationCode = "SP200"; //id da estação - alterar e conferir depois de depurar o programa
-String firmwareVersion = "1.0";
+String firmwareVersion = "1.1";
 String loraPacket = "";
 
 //Variável para guardar o valor do estado atual do relê 
@@ -263,20 +263,13 @@ void refreshDisplay(String connection) {
         Heltec.display->display();
       }
 
-void weatherDisplay(int temperatura, int humidade, int max_s, int min_s){
+void weatherDisplay(int temperatura, int humidade, int max_s, int min_s, int precip){
       //Limpa o display
         Heltec.display->clear();
         //Atualiza informacoes da temperatura
         Heltec.display->setFont(ArialMT_Plain_10);
         Heltec.display->setTextAlignment(TEXT_ALIGN_CENTER);
         Heltec.display->drawString(64, 2, "AgroexPerto " + firmwareVersion);
-        //Heltec.display->setFont(ArialMT_Plain_16);
-        //Heltec.display->drawString(32, 16, String(temperatura));
-        //Heltec.display->drawCircle(52, 22, 2);
-        //Heltec.display->drawString(32, 42, String(humidade));
-        //Heltec.display->drawCircle(50, 48, 2);
-        //Heltec.display->drawCircle(59, 61, 2);
-        //Heltec.display->drawLine(50, 62, 58, 48);
         Heltec.display->setFont(ArialMT_Plain_24);
         Heltec.display->drawString(32, 16, String(temperatura));
         Heltec.display->drawCircle(52, 22, 2);
@@ -284,18 +277,25 @@ void weatherDisplay(int temperatura, int humidade, int max_s, int min_s){
         Heltec.display->drawCircle(50, 48, 2);
         Heltec.display->drawCircle(59, 61, 2);
         Heltec.display->drawLine(50, 62, 58, 48);
-              
+        
         //Atualiza maxima 
         Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
         Heltec.display->setFont(ArialMT_Plain_10);
-        Heltec.display->drawString(70, 24, "Max");
+        Heltec.display->drawString(70, 19, "Max");
         Heltec.display->setFont(ArialMT_Plain_16);
-        Heltec.display->drawString(98, 19, String(max_s));
+        Heltec.display->drawString(98, 15, String(max_s));
         //Atualiza minima      
         Heltec.display->setFont(ArialMT_Plain_10);
-        Heltec.display->drawString(70, 48, "Min");
+        Heltec.display->drawString(70, 37, "Min");
         Heltec.display->setFont(ArialMT_Plain_16);
-        Heltec.display->drawString(98, 43, String(min_s));
+        Heltec.display->drawString(98, 33, String(min_s));
+
+        //Atualiza pluviometria
+        Heltec.display->setTextAlignment(TEXT_ALIGN_LEFT);
+        Heltec.display->setFont(ArialMT_Plain_10);
+        Heltec.display->drawString(98, 52, "mm");
+        Heltec.display->setFont(ArialMT_Plain_16);
+        Heltec.display->drawString(70, 48, String(precip));
         Heltec.display->display();
 }
 
@@ -315,7 +315,7 @@ void loop() {
       //Executa as tarefas que foram adicionadas ao scheduler
       //scheduler.execute();
       
-  weatherDisplay(temp, humid, maxima, minima);
+  weatherDisplay(temp, humid, maxima, minima, precip);
       
   }
 
@@ -475,7 +475,7 @@ void handleWeather(){
                   minima = temp;}  
               
               //Envia as informacoes para o display
-              weatherDisplay(temp, humid, maxima, minima);
+              weatherDisplay(temp, humid, maxima, minima, precip);
               delay(100); 
           //===============================================================
           
@@ -505,11 +505,9 @@ void readPluv(){
           lastDebounceTime = millis();
           lastState = 1;
           reedCounter +=1;
-          Serial.println(" bascula acionada ");
           }    
         if ((millis() - lastDebounceTime) > debounceDelay) {
-          if (lastState == 1 && vl == 0){
-             Serial.println("nova leitura");            
+          if (lastState == 1 && vl == 0){            
             lastState = 0;            
             precipitacao = precipitacao + 0.27;
             precip = round(precipitacao);
@@ -520,6 +518,7 @@ void readPluv(){
             Serial.print(precipitacao);
             Serial.println(" mm");            
             Serial.println(precip);
+            weatherDisplay(temp, humid, maxima, minima, precip);
           }
       }  
   }

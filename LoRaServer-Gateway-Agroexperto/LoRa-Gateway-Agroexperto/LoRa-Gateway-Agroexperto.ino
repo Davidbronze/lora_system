@@ -23,66 +23,7 @@
 
 //Colar abaixo as credenciais
 
-//SSID e senha do roteador ao qual o gateway vai conectar
-#define  SSID     "VIVOFIBRA-5F56"
 
-#define  PASSWORD "33d7405f56"
-
-const char* ssid = SSID;
-const char* password = PASSWORD;
-IPAddress staticIP(192, 168, 15, 111); //IP do GATEWAY
-IPAddress gateway ( 192, 168, 15, 1);
-IPAddress subnet ( 255, 255, 255, 0 );
-IPAddress dnsA ( 8, 8, 8, 8);
-
-//url do servidor para enviar dados
-const char* serverName = "https://agroexperto.com.br/databank/inseredados.php";
-
-//identificação da estação (código AgroexPerto)
-String stationCode = "xx-Gate-1";
-String firmwareVersion = "1.3";
-
-const char* hostAgro = "agroexperto.com.br/databank/inseredados.php";
-
-const char* rootCACertificate = \
-"-----BEGIN CERTIFICATE-----\n" \
-"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\n" \
-"wAahQ8S5gW+dsoLxDB7o4G5SClao2Q==\n" \
-"-----END CERTIFICATE-----\n" ;
-
-//============================
 
 //host para OTA
 
@@ -320,7 +261,12 @@ void updateOTA(){
                         webServerOta.sendHeader("Connection", "close");
                         webServerOta.send(200, "text/html", loginIndex);
                       });
-      webServerOta.on("/command", taskGetCommand);
+      webServerOta.on("/command", HTTP_GET,
+                      []() {
+                        webServerOta.sendHeader("Connection", "close");
+                        webServerOta.send(200, "text/html", webServerOta.arg(0));
+                      },
+                      taskGetCommand);
       webServerOta.on("/serverIndex", HTTP_GET,
                       []() {
                         webServerOta.sendHeader("Connection", "close");
